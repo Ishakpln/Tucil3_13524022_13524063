@@ -16,7 +16,7 @@ Board::Board(
       tiles(tiles),
       startPosition(startPosition),
       finishPosition(finishPosition),
-      numberPositions(numberPositions) {}   x
+      numberPositions(numberPositions) {}   
 
 int Board::getRows() const {
     return rows;

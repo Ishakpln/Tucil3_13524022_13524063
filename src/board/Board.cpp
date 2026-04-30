@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <stdexcept>
-#include "Board.hpp"
+#include "board/Board.hpp"
 
 using namespace std;
 
@@ -44,6 +44,18 @@ int Board::getCost(int row, int col) const {
         throw out_of_range("Tile position is outside the board");
     }
     return costs[row * cols + col];
+}
+
+const vector<Point>& Board::getNumberPositions() const {
+    return numberPositions;
+}
+
+Point Board::getStartPosition() const {
+    return startPosition;
+}
+
+Point Board::getFinishPosition() const {
+    return finishPosition;
 }
 
 void Board::printBoard() const {

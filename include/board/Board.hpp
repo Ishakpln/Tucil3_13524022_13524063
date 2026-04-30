@@ -29,6 +29,9 @@ public:
 
     int getRows() const;
     int getCols() const;
+    const std::vector<Point>& getNumberPositions() const;
+    Point getStartPosition() const;
+    Point getFinishPosition() const;
     char getTile(int row, int col) const;
     int getCost(int row, int col) const;
     float getDistance(Point start, Point target) const;

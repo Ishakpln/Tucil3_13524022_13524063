@@ -7,7 +7,7 @@ struct Point {
     int y;
 };
 
-enum class Dir {
+enum class Direction {
     up,
     right,
     left,
@@ -19,5 +19,12 @@ struct SlideResult {
     bool isGameOver;
     int cost;
 };
+
+enum class HeuristicType {
+    EUCLIDEAN,
+    TYPE2,
+    TYPE3 //isi nanti
+};
+
 
 #endif

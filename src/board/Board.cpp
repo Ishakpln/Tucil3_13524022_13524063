@@ -1,19 +1,24 @@
 #include <iostream>
 #include <cmath>
 #include <stdexcept>
-#include "../include/board/Board.hpp"
+#include "Board.hpp"
+
+using namespace std;
 
 Board::Board(
     int rows,
     int cols,
-    const std::vector<char>& tiles,
+    const vector<char>& tiles,
+    const vector<int>& costs,
     Point startPosition,
+    Point playerPosition,
     Point finishPosition,
-    const std::vector<Point>& numberPositions
+    const vector<Point>& numberPositions
 )
     : rows(rows),
       cols(cols),
       tiles(tiles),
+      costs(costs),
       startPosition(startPosition),
       finishPosition(finishPosition),
       numberPositions(numberPositions) {}   
@@ -28,18 +33,102 @@ int Board::getCols() const {
 
 char Board::getTile(int row, int col) const {
     if (row < 0 || row >= rows || col < 0 || col >= cols) {
-        throw std::out_of_range("Tile position is outside the board");
+        throw out_of_range("Tile position is outside the board");
     }
 
     return tiles[row * cols + col];
 }
 
-float Board::getDistance(Point start, Point target) const {
-    int dx = target.x - start.x;
-    int dy = target.y - start.y;
-    return std::sqrt(dx * dx + dy * dy);
+int Board::getCost(int row, int col) const {
+    if (row < 0 || row >= rows || col < 0 || col >= cols) {
+        throw out_of_range("Tile position is outside the board");
+    }
+    return costs[row * cols + col];
 }
 
-SlideResult Board::slideTo(Point start, Dir direction) {
-    // returns struct SlideResult after input up/left/right/down from initial position start
+void Board::printBoard() const {
+    for (int row = 0; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
+            cout << getTile(row, col);
+        }
+        cout << '\n';
+    }
+}
+
+void Board::printBoardWithPlayer(Point playerPosition) const {
+    if (playerPosition.x < 0 || playerPosition.x >= rows ||
+        playerPosition.y < 0 || playerPosition.y >= cols) {
+        throw out_of_range("Player position is outside the board");
+    }
+
+    for (int row = 0; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
+            if (row == playerPosition.x && col == playerPosition.y) {
+                cout << 'P';
+            } else {
+                cout << getTile(row, col);
+            }
+        }
+        cout << '\n';
+    }
+}
+
+SlideResult Board::slideTo(Point start, Direction direction) const {
+    int dx = 0;
+    int dy = 0;
+
+    switch (direction) {
+        case Direction::up:
+            dx = -1;
+            dy = 0;
+            break;
+        case Direction::down:
+            dx = 1;
+            dy = 0;
+            break;
+        case Direction::left:
+            dx = 0;
+            dy = -1;
+            break;
+        case Direction::right:
+            dx = 0;
+            dy = 1;
+            break;
+    }
+
+    Point current = start;
+    int totalCost = 0;
+
+    while (true) {
+        Point next = {current.x + dx, current.y + dy};
+
+        if (next.x < 0 || next.x >= rows || next.y < 0 || next.y >= cols) {
+            return {
+                current,
+                true,
+                totalCost
+            };
+        }
+
+        char nextTile = getTile(next.x, next.y);
+
+        if (nextTile == 'X') {
+            return {
+                current,
+                false,
+                totalCost
+            };
+        }
+
+        if (nextTile == 'L') {
+            return {
+                next,
+                true,
+                totalCost
+            };
+        }
+
+        current = next;
+        totalCost += getCost(current.x, current.y);
+    }
 }

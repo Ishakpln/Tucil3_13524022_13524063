@@ -8,11 +8,11 @@
 class AStar : public Solver {
 private:
     HeuristicType heuristicType;
+    Result constructPath(std::vector<Node> allNodes, Node finalNode);
 public:
     AStar(Board board, HeuristicType heuristicType);
 
     float heuristic(Point position, Point target) const;
-    static float getPriority(const Node& node);
     bool isFinished(Point position) const;
 
     Result solve() override;

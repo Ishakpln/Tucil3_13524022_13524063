@@ -9,11 +9,12 @@
 
 struct Result { 
     bool found;
+    float time;
     int totalCost;
     int iterations;
     std::vector<Direction> movesSolution;
-    std::vector<Point> pathSolution;
-    std::vector<Point> expandedPaths;
+    std::vector<Node> pathSolution;
+    std::vector<Node> expandedPaths;
 };
 
 class Solver {

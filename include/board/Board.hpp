@@ -3,8 +3,6 @@
 
 #include <vector>
 #include "utils/Helper.hpp"
-#include "solver/Algorithm/Solver.hpp"
-
 
 class Board {
 private:
@@ -32,7 +30,7 @@ public:
 
     int getRows() const;
     int getCols() const;
-    const std::vector<Point>& getNumberPositions() const;
+    Point getNumberPosition(int index) const;
     Point getStartPosition() const;
     Point getFinishPosition() const;
     char getTile(Point point) const;

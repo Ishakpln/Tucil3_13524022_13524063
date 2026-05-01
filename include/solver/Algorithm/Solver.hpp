@@ -3,17 +3,9 @@
 
 #include "utils/Helper.hpp"
 #include <vector>
+#include <stack>
 #include <queue>
 #include "board/Board.hpp"
-
-struct Node {
-    Point position;
-    int targetIndex;
-    int gCost;
-    int hCost;
-    int parentIndex;
-    Direction move;
-};
 
 struct Result { 
     bool found;

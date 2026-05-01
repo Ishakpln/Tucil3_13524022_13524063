@@ -66,8 +66,8 @@ char Board::getNumber(int index) const {
     return numbersTarget[index];
 }
 
-const vector<Point>& Board::getNumberPositions() const {
-    return numberPositions;
+Point Board::getNumberPosition(int index) const {
+    return numberPositions[index];
 }
 
 Point Board::getStartPosition() const {
@@ -137,7 +137,8 @@ SlideResult Board::slideTo(Node start, Direction direction) const {
         if (nextPoint.x < 0 || nextPoint.x >= rows ||
             nextPoint.y < 0 || nextPoint.y >= cols) {
             return {
-                start,
+                currPoint,
+                targetIndex,
                 true,
                 false,
                 totalCost
@@ -147,21 +148,17 @@ SlideResult Board::slideTo(Node start, Direction direction) const {
         char nextTile = getTile(nextPoint);
 
         if (nextTile == 'X') {
-            Node newNode = {
-                currPoint,
-                targetIndex,
-                0,
-                0,
-                0,
-                direction
-            };
+            bool isFinished = false;
 
-            bool isFinished =
-                getTile(currPoint) == 'O' &&
-                getNumber(targetIndex) == 'O';
+            if (getTile(currPoint) == 'O' &&
+                targetIndex < numbersTarget.size() &&
+                getNumber(targetIndex) == 'O') {
+                isFinished = true;
+            }
 
             return {
-                newNode,
+                currPoint,
+                targetIndex,
                 false,
                 isFinished,
                 totalCost
@@ -170,7 +167,8 @@ SlideResult Board::slideTo(Node start, Direction direction) const {
 
         if (nextTile == 'L') {
             return {
-                start,
+                currPoint,
+                targetIndex,
                 true,
                 false,
                 totalCost
@@ -178,20 +176,34 @@ SlideResult Board::slideTo(Node start, Direction direction) const {
         }
 
         if (nextTile >= '0' && nextTile <= '9') {
-            char targetNumber = getNumber(targetIndex);
-
-            if (nextTile - '0' > targetNumber - '0') {
+            if (targetIndex >= numbersTarget.size()) {
                 return {
-                    start,
+                    currPoint,
+                    targetIndex,
                     true,
                     false,
                     totalCost
                 };
             }
 
-            if (nextTile == targetNumber) {
-                targetIndex++;
+            char targetNumber = getNumber(targetIndex);
+
+            if (targetNumber >= '0' && targetNumber <= '9') {
+                if (nextTile - '0' > targetNumber - '0') {
+                    return {
+                        currPoint,
+                        targetIndex,
+                        true,
+                        false,
+                        totalCost
+                    };
+                }
+
+                if (nextTile == targetNumber) {
+                    targetIndex++;
+                }
             }
+
         }
 
         currPoint = nextPoint;

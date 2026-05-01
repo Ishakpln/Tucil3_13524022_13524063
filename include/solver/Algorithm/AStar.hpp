@@ -9,7 +9,12 @@ class AStar : public Solver {
 private:
     HeuristicType heuristicType;
 public:
-    AStar(const Board& board, HeuristicType heuristicType);
+    AStar(Board board, HeuristicType heuristicType);
+
+    float heuristic(Point position, Point target) const;
+    float getPriority(const Node& node) const;
+    bool isFinished(Point position) const;
+
     Result solve() override;
 };
 

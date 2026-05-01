@@ -5,6 +5,14 @@
 struct Point {
     int x;
     int y;
+
+    bool operator==(const Point& other) const {
+        return x == other.x && y == other.y;
+    }
+
+    bool operator!=(const Point& other) const {
+        return !(*this == other);
+    }
 };
 
 enum class Direction {
@@ -15,8 +23,9 @@ enum class Direction {
 };
 
 struct SlideResult {
-    Point position;
-    bool isGameOver;
+    Node position;
+    bool isGameOver; //game sudha berakhir tapi tidak valid (misal jatuh ke lava, etc)
+    bool isFinished; //game sudah berakhir secara valid
     int cost;
 };
 

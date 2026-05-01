@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "utils/Helper.hpp"
+#include "solver/Algorithm/Solver.hpp"
 
 
 class Board {
@@ -14,6 +15,7 @@ private:
     Point startPosition;
     Point finishPosition;
     std::vector<Point> numberPositions;
+    std::vector<char> numbersTarget;
 
 public:
     Board(
@@ -24,7 +26,8 @@ public:
         Point startPosition,
         Point playerPosition,
         Point finishPosition,
-        const std::vector<Point>& numberPositions
+        const std::vector<Point>& numberPositions,
+        const std::vector<char>& numbersTarget
     );
 
     int getRows() const;
@@ -32,12 +35,13 @@ public:
     const std::vector<Point>& getNumberPositions() const;
     Point getStartPosition() const;
     Point getFinishPosition() const;
-    char getTile(int row, int col) const;
-    int getCost(int row, int col) const;
-    float getDistance(Point start, Point target) const;
+    char getTile(Point point) const;
+    Point getTilePosition(char c) const;
+    int getCost(Point point) const;
+    char getNumber(int index) const;
     void printBoard() const;
     void printBoardWithPlayer(Point playerPosition) const;
-    SlideResult slideTo(Point start, Direction direction) const;
+    SlideResult slideTo(Node start, Direction direction) const;
 };
 
 #endif

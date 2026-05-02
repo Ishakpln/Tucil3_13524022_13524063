@@ -24,7 +24,8 @@ protected:
     Point startPosition;
 public:
     Solver(const Board& board) : board(board){};
-    virtual Result solve();
+    virtual ~Solver() = default;
+    virtual Result solve() = 0;
 };
 
 #endif

@@ -4,13 +4,15 @@
 #include "Solver.hpp"
 #include "solver/Heuristic/Heuristic.hpp"
 #include "utils/Helper.hpp"
+#include <queue>
+#include <vector>
 
 class AStar : public Solver {
 private:
     HeuristicType heuristicType;
-    Result constructPath(std::vector<Node> allNodes, Node finalNode);
+    Result constructPath(const std::vector<Node>& allNodes, const Node& finalNode, const std::vector<Node>& expandedNodes);
 public:
-    AStar(Board board, HeuristicType heuristicType);
+    AStar(const Board& board, HeuristicType heuristicType);
 
     float heuristic(Point position, Point target) const;
     bool isFinished(Point position) const;
@@ -19,10 +21,15 @@ public:
 };
 
 
+struct CompareNode {
+    bool operator()(const Node& a, const Node& b) const {
+        return a.fCost > b.fCost;
+    }
+};
+
 class HeapSet {
 private:
-    Node topNode;
-    std::stack<Node> elements;
+    std::priority_queue<Node, std::vector<Node>, CompareNode> elements;
 public:
     HeapSet(Node node);
     Node getTopValue();

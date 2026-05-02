@@ -29,7 +29,7 @@ struct Node {
     int targetIndex;    //target index number sekarag baut array target number (1,2,3,4,5,O) -> selalu di akhiri O
     int gCost;  //buat path finder yg g ada g cost atau h cost buat aja 0
     float hCost;
-    int fCost;  //buat AStar
+    float fCost;  //buat AStar
     int parentIndex;
     Direction move;
 };

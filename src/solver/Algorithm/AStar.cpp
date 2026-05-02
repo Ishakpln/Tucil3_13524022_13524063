@@ -1,11 +1,12 @@
 #include "solver/Algorithm/AStar.hpp"
+#include <algorithm>
 #include <unordered_map>
 
-AStar::AStar(Board board, HeuristicType heuristicType)
+AStar::AStar(const Board& board, HeuristicType heuristicType)
     : Solver(board), heuristicType(heuristicType) {}
 
 float AStar::heuristic(Point position, Point target) const {
-    return ::heuristic(position, target, HeuristicType::EUCLIDEAN);
+    return ::heuristic(position, target, heuristicType);
 }
 
 bool AStar::isFinished(Point position) const {
@@ -24,8 +25,33 @@ std::string getStateKey(const Node& node) {
            std::to_string(node.targetIndex);
 }
 
-Result AStar::constructPath(std::vector<Node> allNodes, Node finalNode) {
-    
+Result AStar::constructPath(const std::vector<Node>& allNodes, const Node& finalNode, const std::vector<Node>& expandedNodes) {
+    Result result;
+    result.found = true;
+    result.time = 0;
+    result.totalCost = finalNode.gCost;
+    result.iterations = static_cast<int>(expandedNodes.size());
+    result.expandedPaths = expandedNodes;
+
+    Node currentNode = finalNode;
+
+    while (true) {
+        result.pathSolution.push_back(currentNode);
+
+        if (currentNode.parentIndex == -1) {
+            break;
+        }
+
+        currentNode = allNodes[currentNode.parentIndex];
+    }
+
+    std::reverse(result.pathSolution.begin(), result.pathSolution.end());
+
+    for (int i = 1; i < static_cast<int>(result.pathSolution.size()); i++) {
+        result.movesSolution.push_back(result.pathSolution[i].move);
+    }
+
+    return result;
 }
 
 Result AStar::solve() {
@@ -37,8 +63,7 @@ Result AStar::solve() {
     HeapSet openNodes = HeapSet(startNode);
     std::unordered_map<std::string, float> closeNodes;
     std::vector<Node> allNodes;
-    allNodes.push_back(startNode);
-    SlideResult slideResult = {startNode.position, false, false, 0};    
+    std::vector<Node> expandedNodes;
 
     Direction directions[] = {
         Direction::up,
@@ -63,6 +88,7 @@ Result AStar::solve() {
 
         int currIndex = allNodes.size();
         allNodes.push_back(candidateNode);
+        expandedNodes.push_back(candidateNode);
 
         
         for (Direction d : directions) {
@@ -84,7 +110,7 @@ Result AStar::solve() {
             if (slideResult.isFinished) {
                 allNodes.push_back(newNode);
 
-                return constructPath(allNodes, newNode);
+                return constructPath(allNodes, newNode, expandedNodes);
             }
 
             std::string newKey = getStateKey(newNode);
@@ -99,37 +125,34 @@ Result AStar::solve() {
         }
     }
 
-    return {};
+    Result result;
+    result.found = false;
+    result.time = 0;
+    result.totalCost = 0;
+    result.iterations = static_cast<int>(expandedNodes.size());
+    result.expandedPaths = expandedNodes;
+
+    return result;
 }
 
-HeapSet::HeapSet(Node node) : topNode(node) {
+HeapSet::HeapSet(Node node) {
     elements.push(node);
 };
 
 Node HeapSet::getTopValue() {
-    return topNode;
+    return elements.top();
 }
+
 void HeapSet::pushElement(Node node) {
-    if (getTopValue().fCost < node.fCost) { //semakin rendah semakin ke atas
-        topNode = node;
-    }
     elements.push(node);
 } 
 
 void HeapSet::popElement() {
-    if (!isEmpty()) {
+    if (!elements.empty()) {
         elements.pop();
-    }
-    else {
-        return;
     }
 }
 
 bool HeapSet::isEmpty() {
-    if (elements.empty()) {
-        return true;
-    }
-    else {
-        return false;
-    }
+    return elements.empty();
 }

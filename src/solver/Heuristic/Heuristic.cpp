@@ -1,4 +1,4 @@
-#include "Heuristic/Heuristic.hpp"
+#include "solver/Heuristic/Heuristic.hpp"
 
 float heuristic(Point start, Point target, HeuristicType type) {
     if (type == HeuristicType::EUCLIDEAN) {
@@ -6,4 +6,6 @@ float heuristic(Point start, Point target, HeuristicType type) {
         int dy = target.y - start.y;
         return sqrt(dx * dx + dy * dy);
     } 
+
+    return 0;
 }

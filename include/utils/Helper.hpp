@@ -67,10 +67,10 @@ enum class AlgorithmType {
 };
 
 enum class HeuristicType {
-    EUCLIDEAN,
-    ENHANCEDEUCLIDEAN,
-    MANHATTAN,
-    ENHANCEDMANHATTAN,
+    EUCLIDEAN_MIN,
+    EUCLIDEAN_AVG,
+    MANHATTAN_MIN,
+    MANHATTAN_AVG,
     SENTINEL
 };
 

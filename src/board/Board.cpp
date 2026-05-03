@@ -28,19 +28,19 @@ Board::Board(
 
         float total = 0;
         int count = 0;
-        int minCost = std::numeric_limits<int>::max();
+        int minimumCost = std::numeric_limits<int>::max();
         for (int i = 0;i < tiles.size();i++) {
             if (tiles.at(i) == '*') {
                 total += costs.at(i);
-                if (costs.at(i) <= minCost) {
-                    minCost = costs.at(i);
+                if (costs.at(i) <= minimumCost) {
+                    minimumCost = costs.at(i);
                 }
                 count++;
             }
         }
 
         avgCost = count > 0 ? total/count : 0;
-        minCost = count > 0 ? minCost : 0;
+        minCost = count > 0 ? minimumCost : 0;
       }   
 
 int Board::getRows() const {

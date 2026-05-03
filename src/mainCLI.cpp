@@ -26,11 +26,17 @@ namespace {
     }
 
     HeuristicType parseHeuristicType(const string& input) {
-        if (input == "Euclidean") {
-            return HeuristicType::EUCLIDEAN;
+        if (input == "Euclidean_min") {
+            return HeuristicType::EUCLIDEAN_MIN;
         }
-        if (input == "Manhattan") {
-            return HeuristicType::MANHATTAN;
+        if (input == "Euclidean_avg") {
+            return HeuristicType::EUCLIDEAN_AVG;
+        }
+        if (input == "Manhattan_min") {
+            return HeuristicType::MANHATTAN_MIN;
+        }
+        if (input == "Manhattan_avg") {
+            return HeuristicType::MANHATTAN_AVG;
         }
         //more to come
         throw invalid_argument("Choose only available valid given heuristics");
@@ -57,10 +63,14 @@ namespace {
 
     string HeuristicTypeToString(HeuristicType heuristic) {
         switch (heuristic) {
-            case HeuristicType::EUCLIDEAN:
-                return "Euclidean";
-            case HeuristicType::MANHATTAN:
-                return "Manhattan";
+            case HeuristicType::EUCLIDEAN_MIN:
+                return "Euclidean_min";
+            case HeuristicType::EUCLIDEAN_AVG:
+                return "Euclidean_avg";
+            case HeuristicType::MANHATTAN_MIN:
+                return "Manhattan_min";
+            case HeuristicType::MANHATTAN_AVG:
+                return "Manhattan_avg";
             case HeuristicType::SENTINEL:
                 break;
         }
@@ -148,7 +158,7 @@ int main() {
     }
 
     while (true) {
-        cout << "Pilih heuristic (Euclidean/Manhattan): ";
+        cout << "Pilih heuristic (Euclidean_min/Euclidean_avg/Manhattan_min/Manhattan_avg): ";
         getline(cin, heuristicInput);
 
         try {

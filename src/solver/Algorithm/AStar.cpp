@@ -1,6 +1,7 @@
 #include "solver/Algorithm/AStar.hpp"
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -8,7 +9,7 @@ AStar::AStar(const Board& board, HeuristicType heuristicType)
     : Solver(board), heuristicType(heuristicType) {}
 
 float AStar::heuristic(Point position, Point target) const {
-    return ::heuristic(position, target, heuristicType);
+    return ::heuristic(position, target, heuristicType, board.getAvgCost(), board.getMinCost());
 }
 
 bool AStar::isFinished(Point position) const {
@@ -164,6 +165,47 @@ bool HeapSet::isEmpty() {
     return elements.empty();
 }
 
+void AStar::playSolution(Board board, const std::vector<Node>& pathSolution) {
+    if (pathSolution.empty()) {
+        std::cout << "no solution to display\n";
+        return;
+    }
+
+    std::cout << "Initial:\n";
+    board.printBoardWithPlayer(pathSolution[0].position);
+
+    for (int i = 1; i < static_cast<int>(pathSolution.size()); i++) {
+        const Node& node = pathSolution[i];
+
+        std::cout << "\nStep " << i << " : " << node.move << '\n';
+        std::cout << "G cost = " << node.gCost << '\n';
+        std::cout << "H cost = " << node.hCost << '\n';
+        std::cout << "F cost = " << node.fCost << "\n\n";
+        board.printBoardWithPlayer(node.position);
+    }
+}
+
+void AStar::showSolutionAt(Board board, const std::vector<Node>& pathSolution, int index) {
+    if (pathSolution.empty()) {
+        std::cout << "no solution to display\n";
+        return;
+    }
+
+    const Node& node = pathSolution[index];
+
+    std::cout << "Step " << index;
+
+    if (index > 0) {
+        std::cout << " : " << node.move;
+    }
+
+    std::cout << '\n';
+    std::cout << "G cost = " << node.gCost << '\n';
+    std::cout << "H cost = " << node.hCost << '\n';
+    std::cout << "F cost = " << node.fCost << "\n\n";
+    board.printBoardWithPlayer(node.position);
+}
+
 void AStar::saveSolution(const std::string& outputPath, const Result& result) {
     std::ofstream output(outputPath);
 
@@ -171,6 +213,7 @@ void AStar::saveSolution(const std::string& outputPath, const Result& result) {
         throw std::runtime_error("Failed to open output file: " + outputPath);
     }
 
+    output << "Problem:\n";
     output << board.getRows() << ' ' << board.getCols() << '\n';
 
     for (int row = 0; row < board.getRows(); row++) {
@@ -191,73 +234,19 @@ void AStar::saveSolution(const std::string& outputPath, const Result& result) {
         output << '\n';
     }
 
-    output << '\n';
+    output << "\nSolution:\n";
 
     if (!result.found || result.pathSolution.empty()) {
-        output << "No solution found\n";
-        output << "Cost total = 0\n";
+        output << "Move solution : -\n";
+        output << "Total cost    : 0\n";
         return;
     }
 
+    output << "Move solution : ";
     for (Direction move : result.movesSolution) {
         output << move;
     }
 
-    output << "\n";
-    output << "cost awal = " << board.getCost(result.pathSolution[0].position) << " \n";
-
-    for (int i = 1; i < static_cast<int>(result.pathSolution.size()); i++) {
-        const Node& previousNode = result.pathSolution[i - 1];
-        const Node& currentNode = result.pathSolution[i];
-        Direction move = currentNode.move;
-
-        int dx = 0;
-        int dy = 0;
-
-        switch (move) {
-            case Direction::U:
-                dx = -1;
-                break;
-            case Direction::D:
-                dx = 1;
-                break;
-            case Direction::L:
-                dy = -1;
-                break;
-            case Direction::R:
-                dy = 1;
-                break;
-        }
-
-        Point position = previousNode.position;
-        std::vector<int> moveCosts;
-
-        while (position != currentNode.position) {
-            position = {
-                position.x + dx,
-                position.y + dy
-            };
-
-            moveCosts.push_back(board.getCost(position));
-        }
-
-        output << move << " -> cost = ";
-
-        if (moveCosts.empty()) {
-            output << 0;
-        }
-        else {
-            for (int costIndex = 0; costIndex < static_cast<int>(moveCosts.size()); costIndex++) {
-                if (costIndex > 0) {
-                    output << " + ";
-                }
-
-                output << moveCosts[costIndex];
-            }
-        }
-
-        output << '\n';
-    }
-
-    output << "Cost total = " << result.totalCost << '\n';
+    output << '\n';
+    output << "Total cost    : " << result.totalCost << '\n';
 }

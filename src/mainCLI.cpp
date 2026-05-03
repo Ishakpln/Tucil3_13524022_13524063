@@ -1,15 +1,10 @@
-#include "solver/Algorithm/AStar.hpp"
-#include "solver/Algorithm/GBFS.hpp"
-#include "solver/Algorithm/UCS.hpp"
+#include "utils/Bridge.hpp"
 #include "utils/Loader.hpp"
-#include <algorithm>
 #include <cctype>
 #include <exception>
 #include <iostream>
-#include <memory>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 using namespace std;
 
@@ -53,49 +48,61 @@ namespace {
                 return "BFS";
             case AlgorithmType::DFS:
                 return "DFS";
+            case AlgorithmType::SENTINEL:
+                break;
         }
+
+        return "Unknown";
     }
 
-    unique_ptr<Solver> createSolver(AlgorithmType algorithm, const Board& board, HeuristicType heuristicType) {
-        switch (algorithm) {
-            case AlgorithmType::ASTAR:
-                return make_unique<AStar>(board, heuristicType);
-            case AlgorithmType::UCS:
-                throw runtime_error("belum implementasi ucs");
-            case AlgorithmType::GBFS:
-                throw runtime_error("beum implementasi gbfs");
-            case AlgorithmType::BFS:
-                throw runtime_error("belum implementasi bfs");
-            case AlgorithmType::DFS:
-                throw runtime_error("belum implementasi dfs");
+    string HeuristicTypeToString(HeuristicType heuristic) {
+        switch (heuristic) {
+            case HeuristicType::EUCLIDEAN:
+                return "Euclidean";
+            case HeuristicType::MANHATTAN:
+                return "Manhattan";
+            case HeuristicType::SENTINEL:
+                break;
         }
 
-        throw runtime_error("Invalid Algorithm");
-    }
-
-    void printMoves(const vector<Direction>& moves) {
-        if (moves.empty()) {
-            cout << "-";
-            return;
-        }
-
-        for (Direction move : moves) {
-            cout << move;
-        }
-        cout << "\n";
+        return "Unknown";
     }
 
     bool isStringANumber(const string& input) {
         if (input.empty()) {
             return false;
         }
+
         for (char c : input) {
-            if (!isdigit(c)) {
+            if (!isdigit(static_cast<unsigned char>(c))) {
                 return false;
             }
         }
+
         return true;
     }
+
+    bool readYesNo(const string& prompt) {
+        string answer;
+
+        while (true) {
+            cout << prompt;
+            getline(cin, answer);
+
+            if (!answer.empty()) {
+                if (answer[0] == 'Y' || answer[0] == 'y') {
+                    return true;
+                }
+
+                if (answer[0] == 'N' || answer[0] == 'n') {
+                    return false;
+                }
+            }
+
+            cout << "Input harus Y atau N.\n";
+        }
+    }
+
 }
 
 int main() {
@@ -154,92 +161,51 @@ int main() {
     }
 
     try {
-        unique_ptr<Solver> solver = createSolver(algorithm, board, heuristic);
+        SolveResult result = solve(board, algorithm, heuristic);
 
-        Result result = solver->solve();
-
-        if (!result.found) {
-            cout << "\n=== Hasil " << AlgorithmTypeToString(algorithm) << " ===\n";
-            cout << "Found: " << (result.found ? "Yes" : "Not found") << '\n';
-            cout << "Waktu eksekusi: " << result.time << " ms\n";
-            cout << "Banyak expanded nodes: " << result.expandedPaths.size() << '\n';
+        if (!result.isFound) {
+            cout << "\n=== Hasil " << AlgorithmTypeToString(result.algorithm) << " ===\n";
+            cout << "Heuristic: " << HeuristicTypeToString(result.heuristic) << '\n';
+            cout << "Found: Not found\n";
+            cout << "Waktu eksekusi: " << result.execTime << " ms\n";
+            cout << "Banyak iterasi: " << result.iterations << '\n';
             return 0;
         }
 
         cout << "\nIlustrasi solusi:\n";
-        cout << "Moves solusi: ";
-        printMoves(result.movesSolution);
-        cout << "\n";
+        playSolution(board, result);
 
-        solver->playSolution(board, result.pathSolution);
-
-        cout << "\n>>> Hasil " << AlgorithmTypeToString(algorithm) << " <<<\n";
-        cout << "Found: " << (result.found ? "Yes" : "Not found") << '\n';
-        cout << "Cost solusi: " << result.totalCost << '\n';
-        cout << "Moves solusi: ";  
-        printMoves(result.movesSolution);
-        cout << "Waktu eksekusi: " << result.time<< " ms\n";
+        cout << "\n>>> Hasil " << AlgorithmTypeToString(result.algorithm) << " <<<\n";
+        cout << "Heuristic: " << HeuristicTypeToString(result.heuristic) << '\n';
+        cout << "Found: Yes\n";
+        cout << "Cost solusi: " << result.cost << '\n';
+        cout << "Moves solusi: " << result.moves << '\n';
+        cout << "Waktu eksekusi: " << result.execTime << " ms\n";
         cout << "Banyak iterasi: " << result.iterations << '\n';
 
-        string wantsPlayback;
-        while (true) {
-            cout << "\nApakah ingin melakukan playback? (Y/N): ";
-            getline(cin, wantsPlayback);
-
-            if (!wantsPlayback.empty() &&
-                (wantsPlayback[0] == 'Y' || wantsPlayback[0] == 'y' ||
-                 wantsPlayback[0] == 'N' || wantsPlayback[0] == 'n')) {
-                break;
-            }
-
-            cout << "Input harus Y atau N.\n";
-        }
-
-        while (wantsPlayback[0] == 'Y' || wantsPlayback[0] == 'y') {
+        while (readYesNo("\nApakah ingin melakukan playback? (Y/N): ")) {
             string iteration;
             int iterationNum;
+
             while (true) {
                 cout << "\nPada iterasi ke berapa melakukan playback?: ";
                 getline(cin, iteration);
+
                 if (isStringANumber(iteration)) {
                     iterationNum = stoi(iteration);
-                    if ((iterationNum >= 0 && iterationNum <= result.iterations-1)) {
-                        solver->showSolutionAt(board, result.pathSolution, iterationNum);
+
+                    if (iterationNum >= 0 && iterationNum < static_cast<int>(result.pathSolution.size())) {
+                        showSolutionAt(board, result, iterationNum);
                         break;
                     }
                 }
-                cout << "Input harus angka dan berada di interval 0 sampai " << result.iterations-1 << "\n";
-            }
 
-            while (true) {
-                cout << "\nApakah ingin melakukan playback? (Y/N): ";
-                getline(cin, wantsPlayback);
-
-                if (!wantsPlayback.empty() &&
-                    (wantsPlayback[0] == 'Y' || wantsPlayback[0] == 'y' ||
-                    wantsPlayback[0] == 'N' || wantsPlayback[0] == 'n')) {
-                    break;
-                }
-
-                cout << "Input harus Y atau N.\n";
+                cout << "Input harus angka dan berada di interval 0 sampai "
+                     << static_cast<int>(result.pathSolution.size()) - 1 << "\n";
             }
         }
 
-        string saveAnswer;
-        while (true) {
-            cout << "\nApakah ingin menyimpan solusi? (Y/N): ";
-            getline(cin, saveAnswer);
-
-            if (!saveAnswer.empty() &&
-                (saveAnswer[0] == 'Y' || saveAnswer[0] == 'y' ||
-                 saveAnswer[0] == 'N' || saveAnswer[0] == 'n')) {
-                break;
-            }
-
-            cout << "Input harus Y atau N.\n";
-        }
-
-        if (saveAnswer[0] == 'Y' || saveAnswer[0] == 'y') {
+        if (readYesNo("\nApakah ingin menyimpan solusi? (Y/N): ")) {
             string outputPath;
 
             while (true) {
@@ -252,7 +218,7 @@ int main() {
                 }
 
                 try {
-                    solver->saveSolution(outputPath, result);
+                    saveSolution(board, outputPath, result.algorithm, result.heuristic);
                     cout << "Solusi disimpan pada " << outputPath << '\n';
                     break;
                 }

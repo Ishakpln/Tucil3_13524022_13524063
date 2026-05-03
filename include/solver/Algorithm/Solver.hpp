@@ -28,8 +28,8 @@ public:
     Solver(const Board& board);
     virtual ~Solver();
     virtual Result solve() = 0;
-    void playSolution(Board board, const std::vector<Node>& pathSolution);
-    void showSolutionAt(Board board, const std::vector<Node>& pathSolution, int iteration);
+    virtual void playSolution(Board board, const std::vector<Node>& pathSolution);
+    virtual void showSolutionAt(Board board, const std::vector<Node>& pathSolution, int iteration);
     virtual void saveSolution(const std::string& outputPath, const Result& result) = 0;
 };
 

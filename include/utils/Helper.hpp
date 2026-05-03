@@ -62,13 +62,16 @@ enum class AlgorithmType {
     UCS,
     GBFS,
     DFS,
-    BFS
+    BFS,
+    SENTINEL
 };
 
 enum class HeuristicType {
     EUCLIDEAN,
+    ENHANCEDEUCLIDEAN,
     MANHATTAN,
-    TYPE3 //isi nanti
+    ENHANCEDMANHATTAN,
+    SENTINEL
 };
 
 #endif

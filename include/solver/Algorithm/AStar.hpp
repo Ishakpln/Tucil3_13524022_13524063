@@ -18,6 +18,8 @@ public:
     bool isFinished(Point position) const;
 
     Result solve() override;
+    void playSolution(Board board, const std::vector<Node>& pathSolution) override;
+    void showSolutionAt(Board board, const std::vector<Node>& pathSolution, int iteration) override;
     void saveSolution(const std::string& outputPath, const Result& result) override;
 };
 

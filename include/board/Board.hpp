@@ -10,6 +10,8 @@ private:
     int cols;
     std::vector<char> tiles;
     std::vector<int> costs;
+    float avgCost;
+    int minCost;
     Point startPosition;
     Point finishPosition;
     std::vector<Point> numberPositions;
@@ -37,6 +39,8 @@ public:
     char getTile(Point point) const;
     Point getTilePosition(char c) const;
     int getCost(Point point) const;
+    float getAvgCost() const;
+    int getMinCost() const;
     char getNumber(int index) const;
     void printBoard() const;
     void printBoardWithPlayer(Point playerPosition) const;

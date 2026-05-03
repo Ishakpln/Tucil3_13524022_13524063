@@ -2,6 +2,7 @@
 #include <cmath>
 #include <stdexcept>
 #include "board/Board.hpp"
+#include <limits>
 
 using namespace std;
 Board::Board(){};
@@ -23,7 +24,24 @@ Board::Board(
       startPosition(startPosition),
       finishPosition(finishPosition),
       numberPositions(numberPositions),
-      numbersTarget(numbersTarget) {}   
+      numbersTarget(numbersTarget) {
+
+        float total = 0;
+        int count = 0;
+        int minCost = std::numeric_limits<int>::max();
+        for (int i = 0;i < tiles.size();i++) {
+            if (tiles.at(i) == '*') {
+                total += costs.at(i);
+                if (costs.at(i) <= minCost) {
+                    minCost = costs.at(i);
+                }
+                count++;
+            }
+        }
+
+        avgCost = count > 0 ? total/count : 0;
+        minCost = count > 0 ? minCost : 0;
+      }   
 
 int Board::getRows() const {
     return rows;
@@ -60,6 +78,14 @@ int Board::getCost(Point point) const {
         throw out_of_range("Tile position is outside the board");
     }
     return costs[point.x * cols + point.y];
+}
+
+float Board::getAvgCost() const {
+    return avgCost;
+}
+
+int Board::getMinCost() const {
+    return minCost;
 }
 
 char Board::getNumber(int index) const {

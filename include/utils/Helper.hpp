@@ -18,11 +18,26 @@ struct Point {
 };
 
 enum class Direction {
-    up,
-    right,
-    left,
-    down
+    U,
+    R,
+    L,
+    D
 };
+
+inline std::ostream& operator<<(std::ostream& os, Direction direction) {
+    switch (direction) {
+        case Direction::U:
+            return os << 'U';
+        case Direction::R:
+            return os << 'R';
+        case Direction::L:
+            return os << 'L';
+        case Direction::D:
+            return os << 'D';
+    }
+
+    return os << '?';
+}
 
 struct Node {
     Point position;
@@ -42,9 +57,17 @@ struct SlideResult {
     int cost;
 };
 
+enum class AlgorithmType {
+    ASTAR,
+    UCS,
+    GBFS,
+    DFS,
+    BFS
+};
+
 enum class HeuristicType {
     EUCLIDEAN,
-    TYPE2,
+    MANHATTAN,
     TYPE3 //isi nanti
 };
 

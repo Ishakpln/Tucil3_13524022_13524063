@@ -16,6 +16,7 @@ private:
     std::vector<char> numbersTarget;
 
 public:
+    Board();
     Board(
         int rows,
         int cols,

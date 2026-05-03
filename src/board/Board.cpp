@@ -4,7 +4,7 @@
 #include "board/Board.hpp"
 
 using namespace std;
-
+Board::Board(){};
 Board::Board(
     int rows,
     int cols,
@@ -96,9 +96,17 @@ void Board::printBoardWithPlayer(Point playerPosition) const {
     for (int row = 0; row < rows; row++) {
         for (int col = 0; col < cols; col++) {
             if (row == playerPosition.x && col == playerPosition.y) {
-                cout << 'P';
-            } else {
-                cout << getTile({row, col});
+                cout << 'Z';
+            }
+            else {
+                char tile = getTile({row, col});
+
+                if (tile == 'Z') {
+                    cout << '*';
+                }
+                else {
+                    cout << tile;
+                }
             }
         }
         cout << '\n';
@@ -110,16 +118,16 @@ SlideResult Board::slideTo(Node start, Direction direction) const {
     int dy = 0;
 
     switch (direction) {
-        case Direction::up:
+        case Direction::U:
             dx = -1;
             break;
-        case Direction::down:
+        case Direction::D:
             dx = 1;
             break;
-        case Direction::left:
+        case Direction::L:
             dy = -1;
             break;
-        case Direction::right:
+        case Direction::R:
             dy = 1;
             break;
     }
@@ -173,6 +181,18 @@ SlideResult Board::slideTo(Node start, Direction direction) const {
                 false,
                 totalCost
             };
+        }
+
+        if (nextTile == 'O') {
+            if (targetIndex >= numbersTarget.size() || getNumber(targetIndex) != 'O') {
+                return {
+                    currPoint,
+                    targetIndex,
+                    true,
+                    false,
+                    totalCost
+                };
+            }
         }
 
         if (nextTile >= '0' && nextTile <= '9') {

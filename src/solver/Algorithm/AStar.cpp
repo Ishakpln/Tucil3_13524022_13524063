@@ -1,5 +1,7 @@
 #include "solver/Algorithm/AStar.hpp"
 #include <algorithm>
+#include <fstream>
+#include <stdexcept>
 #include <unordered_map>
 
 AStar::AStar(const Board& board, HeuristicType heuristicType)
@@ -25,10 +27,10 @@ std::string getStateKey(const Node& node) {
            std::to_string(node.targetIndex);
 }
 
-Result AStar::constructPath(const std::vector<Node>& allNodes, const Node& finalNode, const std::vector<Node>& expandedNodes) {
+Result AStar::constructPath(const std::vector<Node>& allNodes, const Node& finalNode, const std::vector<Node>& expandedNodes, float duration) {
     Result result;
     result.found = true;
-    result.time = 0;
+    result.time = duration;
     result.totalCost = finalNode.gCost;
     result.iterations = static_cast<int>(expandedNodes.size());
     result.expandedPaths = expandedNodes;
@@ -55,10 +57,11 @@ Result AStar::constructPath(const std::vector<Node>& allNodes, const Node& final
 }
 
 Result AStar::solve() {
+    auto start = std::chrono::high_resolution_clock::now();
     Node startNode = {board.getStartPosition(), 0, 0, 
                     heuristic(board.getStartPosition(), board.getFinishPosition()),
                     heuristic(board.getStartPosition(), board.getFinishPosition()),
-                    -1, Direction::up};
+                    -1, Direction::U};
     
     HeapSet openNodes = HeapSet(startNode);
     std::unordered_map<std::string, float> closeNodes;
@@ -66,10 +69,10 @@ Result AStar::solve() {
     std::vector<Node> expandedNodes;
 
     Direction directions[] = {
-        Direction::up,
-        Direction::down,
-        Direction::left,
-        Direction::right
+        Direction::U,
+        Direction::D,
+        Direction::L,
+        Direction::R
     };
 
     while (!openNodes.isEmpty()) {
@@ -108,9 +111,11 @@ Result AStar::solve() {
             newNode.move = d;
 
             if (slideResult.isFinished) {
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<float, std::milli> duration = end - start;
                 allNodes.push_back(newNode);
 
-                return constructPath(allNodes, newNode, expandedNodes);
+                return constructPath(allNodes, newNode, expandedNodes, duration.count());
             }
 
             std::string newKey = getStateKey(newNode);
@@ -125,9 +130,11 @@ Result AStar::solve() {
         }
     }
 
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float, std::milli> duration = end - start;
     Result result;
     result.found = false;
-    result.time = 0;
+    result.time = duration.count();
     result.totalCost = 0;
     result.iterations = static_cast<int>(expandedNodes.size());
     result.expandedPaths = expandedNodes;
@@ -155,4 +162,102 @@ void HeapSet::popElement() {
 
 bool HeapSet::isEmpty() {
     return elements.empty();
+}
+
+void AStar::saveSolution(const std::string& outputPath, const Result& result) {
+    std::ofstream output(outputPath);
+
+    if (!output.is_open()) {
+        throw std::runtime_error("Failed to open output file: " + outputPath);
+    }
+
+    output << board.getRows() << ' ' << board.getCols() << '\n';
+
+    for (int row = 0; row < board.getRows(); row++) {
+        for (int col = 0; col < board.getCols(); col++) {
+            output << board.getTile({row, col});
+        }
+        output << '\n';
+    }
+
+    for (int row = 0; row < board.getRows(); row++) {
+        for (int col = 0; col < board.getCols(); col++) {
+            if (col > 0) {
+                output << ' ';
+            }
+
+            output << board.getCost({row, col});
+        }
+        output << '\n';
+    }
+
+    output << '\n';
+
+    if (!result.found || result.pathSolution.empty()) {
+        output << "No solution found\n";
+        output << "Cost total = 0\n";
+        return;
+    }
+
+    for (Direction move : result.movesSolution) {
+        output << move;
+    }
+
+    output << "\n";
+    output << "cost awal = " << board.getCost(result.pathSolution[0].position) << " \n";
+
+    for (int i = 1; i < static_cast<int>(result.pathSolution.size()); i++) {
+        const Node& previousNode = result.pathSolution[i - 1];
+        const Node& currentNode = result.pathSolution[i];
+        Direction move = currentNode.move;
+
+        int dx = 0;
+        int dy = 0;
+
+        switch (move) {
+            case Direction::U:
+                dx = -1;
+                break;
+            case Direction::D:
+                dx = 1;
+                break;
+            case Direction::L:
+                dy = -1;
+                break;
+            case Direction::R:
+                dy = 1;
+                break;
+        }
+
+        Point position = previousNode.position;
+        std::vector<int> moveCosts;
+
+        while (position != currentNode.position) {
+            position = {
+                position.x + dx,
+                position.y + dy
+            };
+
+            moveCosts.push_back(board.getCost(position));
+        }
+
+        output << move << " -> cost = ";
+
+        if (moveCosts.empty()) {
+            output << 0;
+        }
+        else {
+            for (int costIndex = 0; costIndex < static_cast<int>(moveCosts.size()); costIndex++) {
+                if (costIndex > 0) {
+                    output << " + ";
+                }
+
+                output << moveCosts[costIndex];
+            }
+        }
+
+        output << '\n';
+    }
+
+    output << "Cost total = " << result.totalCost << '\n';
 }

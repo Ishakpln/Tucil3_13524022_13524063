@@ -6,6 +6,8 @@
 #include <stack>
 #include <queue>
 #include "board/Board.hpp"
+#include <chrono>
+#include <string>
 
 struct Result { 
     bool found;
@@ -23,9 +25,12 @@ protected:
     std::queue<Point> targetPositions;
     Point startPosition;
 public:
-    Solver(const Board& board) : board(board){};
-    virtual ~Solver() = default;
+    Solver(const Board& board);
+    virtual ~Solver();
     virtual Result solve() = 0;
+    void playSolution(Board board, const std::vector<Node>& pathSolution);
+    void showSolutionAt(Board board, const std::vector<Node>& pathSolution, int iteration);
+    virtual void saveSolution(const std::string& outputPath, const Result& result) = 0;
 };
 
 #endif

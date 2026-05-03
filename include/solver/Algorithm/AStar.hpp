@@ -10,7 +10,7 @@
 class AStar : public Solver {
 private:
     HeuristicType heuristicType;
-    Result constructPath(const std::vector<Node>& allNodes, const Node& finalNode, const std::vector<Node>& expandedNodes);
+    Result constructPath(const std::vector<Node>& allNodes, const Node& finalNode, const std::vector<Node>& expandedNodes, float duration);
 public:
     AStar(const Board& board, HeuristicType heuristicType);
 
@@ -18,6 +18,7 @@ public:
     bool isFinished(Point position) const;
 
     Result solve() override;
+    void saveSolution(const std::string& outputPath, const Result& result) override;
 };
 
 

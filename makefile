@@ -18,6 +18,8 @@ CLI := $(BIN_DIR)/mainCLI.exe
 GUI := $(BIN_DIR)/mainGUI.exe
 
 all: cli gui
+run: cli
+	$(CLI)
 cli: $(CLI)
 gui: $(GUI)
 

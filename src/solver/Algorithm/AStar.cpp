@@ -8,18 +8,8 @@
 AStar::AStar(const Board& board, HeuristicType heuristicType)
     : Solver(board), heuristicType(heuristicType) {}
 
-float AStar::heuristic(Point position, Point target) const {
-    return ::heuristic(position, target, heuristicType, board);
-}
-
-bool AStar::isFinished(Point position) const {
-    if (board.getTile(position) == 'O') {
-        return true;
-    }
-    else {
-        return false;
-    }
-
+float AStar::heuristic(Point position, int targetIndex) const {
+    return ::heuristic(position, targetIndex, heuristicType, board);
 }
 
 std::string getStateKey(const Node& node) {
@@ -60,8 +50,8 @@ Result AStar::constructPath(const std::vector<Node>& allNodes, const Node& final
 Result AStar::solve() {
     auto start = std::chrono::high_resolution_clock::now();
     Node startNode = {board.getStartPosition(), 0, 0, 
-                    heuristic(board.getStartPosition(), board.getFinishPosition()),
-                    heuristic(board.getStartPosition(), board.getFinishPosition()),
+                    heuristic(board.getStartPosition(), 0),
+                    heuristic(board.getStartPosition(), 0),
                     -1, Direction::U};
     
     HeapSet openNodes = HeapSet(startNode);
@@ -94,6 +84,15 @@ Result AStar::solve() {
         allNodes.push_back(candidateNode);
         expandedNodes.push_back(candidateNode);
 
+        if (board.getTile(candidateNode.position) == 'O' &&
+            candidateNode.targetIndex < board.getCheckpointCount() &&
+            board.getNumber(candidateNode.targetIndex) == 'O') {
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<float, std::milli> duration = end - start;
+
+            return constructPath(allNodes, candidateNode, expandedNodes, duration.count());
+        }
+
         
         for (Direction d : directions) {
             SlideResult slideResult = board.slideTo(candidateNode, d);
@@ -107,17 +106,9 @@ Result AStar::solve() {
             newNode.targetIndex = slideResult.targetIndex;
             newNode.parentIndex = currIndex;
             newNode.gCost = candidateNode.gCost + slideResult.cost;
-            newNode.hCost = heuristic(newNode.position, board.getFinishPosition());
+            newNode.hCost = heuristic(newNode.position, newNode.targetIndex);
             newNode.fCost = newNode.gCost + newNode.hCost;
             newNode.move = d;
-
-            if (slideResult.isFinished) {
-                auto end = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<float, std::milli> duration = end - start;
-                allNodes.push_back(newNode);
-
-                return constructPath(allNodes, newNode, expandedNodes, duration.count());
-            }
 
             std::string newKey = getStateKey(newNode);
 

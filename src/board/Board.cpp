@@ -14,8 +14,7 @@ Board::Board(
     Point startPosition,
     Point playerPosition,
     Point finishPosition,
-    const vector<Point>& numberPositions,
-    const vector<char>& numbersTarget
+    const vector<CheckpointDistances>& checkpointDistances
 )
     : rows(rows),
       cols(cols),
@@ -23,8 +22,7 @@ Board::Board(
       costs(costs),
       startPosition(startPosition),
       finishPosition(finishPosition),
-      numberPositions(numberPositions),
-      numbersTarget(numbersTarget) {
+      checkpointDistances(checkpointDistances) {
 
         float total = 0;
         int count = 0;
@@ -41,6 +39,19 @@ Board::Board(
 
         avgCost = count > 0 ? total/count : 0;
         minCost = count > 0 ? minimumCost : 0;
+
+        for (int i = 0; i + 1 < static_cast<int>(this->checkpointDistances.size()); i++) {
+            Point current = this->checkpointDistances[i].position;
+            Point next = this->checkpointDistances[i + 1].position;
+
+            this->checkpointDistances[i].euclideanDist = getEuclideanDist(current, next, minCost);
+            this->checkpointDistances[i].manhattanDist = getManhattanDist(current, next, minCost);
+        }
+
+        if (!this->checkpointDistances.empty()) {
+            this->checkpointDistances.back().euclideanDist = 0;
+            this->checkpointDistances.back().manhattanDist = 0;
+        }
       }   
 
 int Board::getRows() const {
@@ -89,11 +100,25 @@ int Board::getMinCost() const {
 }
 
 char Board::getNumber(int index) const {
-    return numbersTarget[index];
+    CheckpointDistances checkpoint = checkpointDistances.at(index);
+
+    if (checkpoint.index < 0) {
+        return 'O';
+    }
+
+    return static_cast<char>('0' + checkpoint.index);
 }
 
 Point Board::getNumberPosition(int index) const {
-    return numberPositions[index];
+    return checkpointDistances.at(index).position;
+}
+
+int Board::getCheckpointCount() const {
+    return static_cast<int>(checkpointDistances.size());
+}
+
+CheckpointDistances Board::getCheckpointDistance(int index) const {
+    return checkpointDistances.at(index);
 }
 
 Point Board::getStartPosition() const {
@@ -185,7 +210,7 @@ SlideResult Board::slideTo(Node start, Direction direction) const {
             bool isFinished = false;
 
             if (getTile(currPoint) == 'O' &&
-                targetIndex < numbersTarget.size() &&
+                targetIndex < static_cast<int>(checkpointDistances.size()) &&
                 getNumber(targetIndex) == 'O') {
                 isFinished = true;
             }
@@ -210,7 +235,7 @@ SlideResult Board::slideTo(Node start, Direction direction) const {
         }
 
         if (nextTile == 'O') {
-            if (targetIndex >= numbersTarget.size() || getNumber(targetIndex) != 'O') {
+            if (targetIndex >= static_cast<int>(checkpointDistances.size()) || getNumber(targetIndex) != 'O') {
                 return {
                     currPoint,
                     targetIndex,
@@ -222,7 +247,7 @@ SlideResult Board::slideTo(Node start, Direction direction) const {
         }
 
         if (nextTile >= '0' && nextTile <= '9') {
-            if (targetIndex >= numbersTarget.size()) {
+            if (targetIndex >= static_cast<int>(checkpointDistances.size())) {
                 return {
                     currPoint,
                     targetIndex,

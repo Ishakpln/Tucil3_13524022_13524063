@@ -14,8 +14,7 @@ private:
 public:
     AStar(const Board& board, HeuristicType heuristicType);
 
-    float heuristic(Point position, Point target) const;
-    bool isFinished(Point position) const;
+    float heuristic(Point position, int targetIndex) const;
 
     Result solve() override;
     void playSolution(Board board, const std::vector<Node>& pathSolution) override;

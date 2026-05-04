@@ -5,6 +5,8 @@
 #include "utils/Helper.hpp"
 #include <math.h>
 
-float heuristic(Point start, Point target, HeuristicType type, float avgCost, float minCost);
+class Board;
+
+float heuristic(Point start, Point target, HeuristicType type, const Board& board);
 
 #endif

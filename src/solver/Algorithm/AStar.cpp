@@ -9,7 +9,7 @@ AStar::AStar(const Board& board, HeuristicType heuristicType)
     : Solver(board), heuristicType(heuristicType) {}
 
 float AStar::heuristic(Point position, Point target) const {
-    return ::heuristic(position, target, heuristicType, board.getAvgCost(), board.getMinCost());
+    return ::heuristic(position, target, heuristicType, board);
 }
 
 bool AStar::isFinished(Point position) const {

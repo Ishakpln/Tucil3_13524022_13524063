@@ -82,12 +82,12 @@ Result GBFS::solve()
         std::string key = getStateKey(candidateNode);
 
         if (visitedNode.find(key) != visitedNode.end()) {
-            if (visitedNode[key] <= candidateNode.gCost) {
+            if (visitedNode[key] <= candidateNode.hCost) {
                 continue;
             }
         }
 
-        visitedNode[key] = candidateNode.gCost;
+        visitedNode[key] = candidateNode.hCost;
 
         int currIndex = static_cast<int>(allNodes.size());
         allNodes.push_back(candidateNode);
@@ -105,9 +105,9 @@ Result GBFS::solve()
             newNode.position = slideResult.position;
             newNode.targetIndex = slideResult.targetIndex;
             newNode.parentIndex = currIndex;
-            newNode.gCost = 0;
+            newNode.gCost = candidateNode.gCost + slideResult.cost;
             newNode.hCost = heuristic(newNode.position, newNode.targetIndex);
-            newNode.fCost = newNode.gCost + newNode.hCost;
+            newNode.fCost = 0;
             newNode.move = d;
 
             if (slideResult.isFinished) {
@@ -121,7 +121,7 @@ Result GBFS::solve()
             std::string newKey = getStateKey(newNode);
 
             if (visitedNode.find(newKey) != visitedNode.end()) {
-                if (visitedNode[newKey] <= newNode.gCost) {
+                if (visitedNode[newKey] <= newNode.hCost) {
                     continue;
                 }
             }

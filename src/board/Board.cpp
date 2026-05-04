@@ -27,7 +27,7 @@ Board::Board(
         float total = 0;
         int count = 0;
         int minimumCost = std::numeric_limits<int>::max();
-        for (int i = 0;i < tiles.size();i++) {
+        for (int i = 0;i < static_cast<int>(tiles.size());i++) {
             if (tiles.at(i) == '*') {
                 total += costs.at(i);
                 if (costs.at(i) <= minimumCost) {

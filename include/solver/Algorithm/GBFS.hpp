@@ -9,13 +9,17 @@
 class GBFS : public Solver {
 private:
     HeuristicType heuristicType;
-    Result constructPath(const std::vector<Node>& allNodes, const Node& finalNode, const std::vector<Node>& expandedNodes);
+    std::string getStateKey(Node node) const;
+    Result constructPath(const std::vector<Node>& allNodes, const Node& finalNode, const std::vector<Node>& expandedNodes, float duration);
 
 public:
     GBFS(const Board& board, HeuristicType heuristicType);
 
-    float heuristic(Point position, Point target) const;
+    float heuristic(Point position, int targetIdx) const;
     Result solve() override;
+    void playSolution(Board board, const std::vector<Node>& pathSolution) override;
+    void showSolutionAt(Board board, const std::vector<Node>& pathSolution, int index) override;
+    void saveSolution(const std::string& outputPath, const Result& result) override;
 };
 
 #endif

@@ -2,6 +2,7 @@
 
 #include "solver/Algorithm/AStar.hpp"
 #include "solver/Algorithm/UCS.hpp"
+#include "solver/Algorithm/GBFS.hpp"
 #include "utils/Loader.hpp"
 #include <memory>
 #include <sstream>
@@ -15,7 +16,7 @@ namespace {
             case AlgorithmType::UCS:
                 return std::make_unique<UCS>(board);
             case AlgorithmType::GBFS:
-                throw std::runtime_error("belum implementasi gbfs");
+                return std::make_unique<GBFS>(board, heuristic);
             case AlgorithmType::BFS:
                 throw std::runtime_error("belum implementasi bfs");
             case AlgorithmType::DFS:

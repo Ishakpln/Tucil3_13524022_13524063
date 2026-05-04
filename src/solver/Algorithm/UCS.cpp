@@ -62,7 +62,6 @@ Result UCS::solve()
     start.fCost = 0;
     start.parentIndex = -1;
     start.move = Direction::U;
-    #include <fstream>
 
     processQueue.push(start);
 
@@ -73,7 +72,7 @@ Result UCS::solve()
         Direction::R
     };
 
-    while (processQueue.empty())
+    while (!processQueue.empty())
     {
         Node candidateNode = processQueue.top();
         processQueue.pop();
@@ -113,7 +112,10 @@ Result UCS::solve()
             }
 
             std::string newKey = getStateKey(newNode);
-            visitedNode[newKey] = newNode.gCost;
+            if (visitedNode.find(newKey) != visitedNode.end())
+            {
+                if (visitedNode[newKey] <= newNode.gCost) continue;
+            }
             processQueue.push(newNode);
         }
     }

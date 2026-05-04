@@ -1,6 +1,7 @@
 #include "utils/Bridge.hpp"
 
 #include "solver/Algorithm/AStar.hpp"
+#include "solver/Algorithm/UCS.hpp"
 #include "utils/Loader.hpp"
 #include <memory>
 #include <sstream>
@@ -12,7 +13,7 @@ namespace {
             case AlgorithmType::ASTAR:
                 return std::make_unique<AStar>(board, heuristic);
             case AlgorithmType::UCS:
-                throw std::runtime_error("belum implementasi ucs");
+                return std::make_unique<UCS>(board);
             case AlgorithmType::GBFS:
                 throw std::runtime_error("belum implementasi gbfs");
             case AlgorithmType::BFS:

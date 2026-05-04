@@ -17,6 +17,7 @@ void Solver::playSolution(Board board, const std::vector<Node>& pathSolution) {
     for (int i = 1; i <pathSolution.size(); i++) {
         const Node& node = pathSolution[i];
         std::cout << "\nStep " << i << " : " << pathSolution[i].move << '\n';
+        std::cout << "G cost = " << node.gCost << '\n';
         board.printBoardWithPlayer(node.position);
     }
 }
@@ -26,5 +27,10 @@ void Solver::showSolutionAt(Board board, const std::vector<Node>& pathSolution, 
         std::cout << "no solution to display\n";
         return;
     }  
+
+    const Node& node = pathSolution[index];
+    std::cout << "Step " << index;
+    if (index > 0) std::cout << " : " << node.move << "\n";
+    std::cout << "G cost = " << node.gCost << "\n";
     board.printBoardWithPlayer(pathSolution[index].position);
 }

@@ -14,7 +14,7 @@ void Solver::playSolution(Board board, const std::vector<Node>& pathSolution) {
     std::cout << "Initial:\n";
     board.printBoardWithPlayer(pathSolution[0].position);
 
-    for (int i = 1; i <pathSolution.size(); i++) {
+    for (int i = 1; i < static_cast<int>(pathSolution.size()); i++) {
         const Node& node = pathSolution[i];
         std::cout << "\nStep " << i << " : " << pathSolution[i].move << '\n';
         std::cout << "G cost = " << node.gCost << '\n';

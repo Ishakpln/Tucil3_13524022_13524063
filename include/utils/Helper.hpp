@@ -71,6 +71,7 @@ enum class HeuristicType {
     EUCLIDEAN_AVG,
     MANHATTAN_MIN,
     MANHATTAN_AVG,
+    MANHATTAN_CHECKPOINT,
     SENTINEL
 };
 

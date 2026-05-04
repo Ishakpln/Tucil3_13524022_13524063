@@ -59,7 +59,7 @@ namespace {
         }
 
         return "Unknown";
-    }
+    }   
 
     string HeuristicTypeToString(HeuristicType heuristic) {
         switch (heuristic) {

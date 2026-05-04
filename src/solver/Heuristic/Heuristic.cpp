@@ -1,25 +1,26 @@
 #include "solver/Heuristic/Heuristic.hpp"
+#include "board/Board.hpp"
 
-float heuristic(Point start, Point target, HeuristicType type, float avgCost, float minCost) {
+float heuristic(Point start, Point target, HeuristicType type, const Board& board) {
     if (type == HeuristicType::EUCLIDEAN_MIN) {
         int dx = target.x - start.x;
         int dy = target.y - start.y;
-        return sqrt(dx * dx + dy * dy) * minCost;
+        return sqrt(dx * dx + dy * dy) * board.getMinCost();
     } 
     else if (type == HeuristicType::EUCLIDEAN_AVG) {
         int dx = target.x - start.x;
         int dy = target.y - start.y;
-        return sqrt(dx * dx + dy * dy) * avgCost; 
+        return sqrt(dx * dx + dy * dy) * board.getAvgCost(); 
     }
     else if (type == HeuristicType::MANHATTAN_MIN) {
         int dx = abs(target.x - start.x);
         int dy = abs(target.y - start.y); 
-        return (dx + dy) * minCost;
+        return (dx + dy) * board.getMinCost();
     }
     else if (type == HeuristicType::MANHATTAN_AVG) {
         int dx = abs(target.x - start.x);
         int dy = abs(target.y - start.y); 
-        return (dx + dy) * avgCost;
+        return (dx + dy) * board.getAvgCost();
     }
 
     return 0;

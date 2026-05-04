@@ -14,7 +14,7 @@ private:
 public:
     AStar(const Board& board, HeuristicType heuristicType);
 
-    float heuristic(Point position, Point target) const;
+    float heuristic(Point position, int targetIndex) const;
     bool isFinished(Point position) const;
 
     Result solve() override;

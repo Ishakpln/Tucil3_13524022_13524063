@@ -7,6 +7,6 @@
 
 class Board;
 
-float heuristic(Point start, Point target, HeuristicType type, const Board& board);
+float heuristic(Point start, int index, HeuristicType type, const Board& board);
 
 #endif

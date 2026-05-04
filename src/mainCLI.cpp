@@ -29,14 +29,14 @@ namespace {
         if (input == "Euclidean_min") {
             return HeuristicType::EUCLIDEAN_MIN;
         }
-        if (input == "Euclidean_avg") {
-            return HeuristicType::EUCLIDEAN_AVG;
+        if (input == "Euclidean_checkpoint") {
+            return HeuristicType::EUCLIDEAN_CHECKPOINT;
         }
         if (input == "Manhattan_min") {
             return HeuristicType::MANHATTAN_MIN;
         }
-        if (input == "Manhattan_avg") {
-            return HeuristicType::MANHATTAN_AVG;
+        if (input == "Manhattan_checkpoint") {
+            return HeuristicType::MANHATTAN_CHECKPOINT;
         }
         //more to come
         throw invalid_argument("Choose only available valid given heuristics");
@@ -65,12 +65,12 @@ namespace {
         switch (heuristic) {
             case HeuristicType::EUCLIDEAN_MIN:
                 return "Euclidean_min";
-            case HeuristicType::EUCLIDEAN_AVG:
-                return "Euclidean_avg";
+            case HeuristicType::EUCLIDEAN_CHECKPOINT:
+                return "Euclidean_checkpoint";
             case HeuristicType::MANHATTAN_MIN:
                 return "Manhattan_min";
-            case HeuristicType::MANHATTAN_AVG:
-                return "Manhattan_avg";
+            case HeuristicType::MANHATTAN_CHECKPOINT:
+                return "Manhattan_checkpoint";
             case HeuristicType::SENTINEL:
                 break;
         }
@@ -158,7 +158,7 @@ int main() {
     }
 
     while (true) {
-        cout << "Pilih heuristic (Euclidean_min/Euclidean_avg/Manhattan_min/Manhattan_avg): ";
+        cout << "Pilih heuristic (Euclidean_min/Euclidean_checkpoint/Manhattan_min/Manhattan_checkpoint): ";
         getline(cin, heuristicInput);
 
         try {

@@ -14,8 +14,7 @@ private:
     int minCost;
     Point startPosition;
     Point finishPosition;
-    std::vector<Point> numberPositions;
-    std::vector<char> numbersTarget;
+    std::vector<CheckpointDistances> checkpointDistances;
 
 public:
     Board();
@@ -27,8 +26,7 @@ public:
         Point startPosition,
         Point playerPosition,
         Point finishPosition,
-        const std::vector<Point>& numberPositions,
-        const std::vector<char>& numbersTarget
+        const std::vector<CheckpointDistances>& checkpointDistances
     );
 
     int getRows() const;
@@ -42,6 +40,8 @@ public:
     float getAvgCost() const;
     int getMinCost() const;
     char getNumber(int index) const;
+    int getCheckpointCount() const;
+    CheckpointDistances getCheckpointDistance(int index) const;
     void printBoard() const;
     void printBoardWithPlayer(Point playerPosition) const;
     SlideResult slideTo(Node start, Direction direction) const;

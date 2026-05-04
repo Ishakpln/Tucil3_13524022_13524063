@@ -137,8 +137,7 @@ Board loadBoard(const std::string& filename) {
         }
     }
 
-    std::vector<Point> numberPositions;
-    std::vector<char> numbersTarget;
+    std::vector<CheckpointDistances> checkpointDistances;
 
     if (highestNumber != -1) {
         for (int digit = 0; digit <= highestNumber; digit++) {
@@ -146,13 +145,21 @@ Board loadBoard(const std::string& filename) {
                 throw std::invalid_argument("Invalid input: number tiles must start from 0 and be contiguous");
             }
 
-            numberPositions.push_back(digitPositions[digit]);
-            numbersTarget.push_back(static_cast<char>('0' + digit));
+            checkpointDistances.push_back({
+                digit,
+                digitPositions[digit],
+                0,
+                0
+            });
         }
     }
 
-    numberPositions.push_back(finishPosition);
-    numbersTarget.push_back('O');
+    checkpointDistances.push_back({
+        -1,
+        finishPosition,
+        0,
+        0
+    });
 
     std::vector<int> costs;
     costs.reserve(rows * cols);
@@ -185,7 +192,6 @@ Board loadBoard(const std::string& filename) {
         startPosition,
         startPosition,
         finishPosition,
-        numberPositions,
-        numbersTarget
+        checkpointDistances
     );
 }

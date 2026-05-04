@@ -57,6 +57,14 @@ struct SlideResult {
     int cost;
 };
 
+struct CheckpointDistances {
+    int index;
+    Point position;
+    float euclideanDist; //jarak ke checkpoint selanjutnya euclidean
+    float manhattanDist; //jarak ke checkpoiint selanjutnya manhattan
+
+};
+
 enum class AlgorithmType {
     ASTAR,
     UCS,
@@ -68,11 +76,14 @@ enum class AlgorithmType {
 
 enum class HeuristicType {
     EUCLIDEAN_MIN,
-    EUCLIDEAN_AVG,
+    EUCLIDEAN_CHECKPOINT,
     MANHATTAN_MIN,
-    MANHATTAN_AVG,
     MANHATTAN_CHECKPOINT,
     SENTINEL
 };
+
+float getEuclideanDist(Point a, Point b, int minCost);
+float getManhattanDist(Point a, Point b, int minCost);
+
 
 #endif

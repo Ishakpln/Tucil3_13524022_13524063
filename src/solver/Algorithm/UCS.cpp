@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <fstream>
 #include <algorithm>
+#include <limits>
 
 UCS::UCS(const Board& board): Solver(board) {}
 
@@ -53,6 +54,10 @@ Result UCS::solve()
     std::unordered_map<std::string, int> visitedNode;
     std::vector<Node> allNodes;
     std::vector<Node> expandedNodes;
+    bool checkAnotherNode = false;
+    Node temporaryFinalNode;
+    int temporaryFinalCost = std::numeric_limits<int>::max();
+
     Result result;
     Node start;
     start.position = board.getStartPosition();
@@ -104,11 +109,23 @@ Result UCS::solve()
             newNode.move = dir;
 
             if (sr.isFinished) {
-                auto eTime = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<float, std::milli> duration = eTime - sTime;
+                temporaryFinalCost = newNode.gCost;
                 allNodes.push_back(newNode);
 
-                return constructPath(allNodes, newNode, expandedNodes, duration.count());
+                if (temporaryFinalCost > newNode.gCost) {temporaryFinalCost = newNode.gCost;}
+
+                if (processQueue.top().gCost < temporaryFinalCost)
+                {
+                    temporaryFinalNode = newNode;
+                    checkAnotherNode = true;
+                }
+                else
+                {
+                    auto eTime = std::chrono::high_resolution_clock::now();
+                    std::chrono::duration<float, std::milli> duration = eTime - sTime;
+                    if (checkAnotherNode) return constructPath(allNodes, temporaryFinalNode, expandedNodes, duration.count());
+                    return constructPath(allNodes, newNode, expandedNodes, duration.count());
+                }
             }
 
             std::string newKey = getStateKey(newNode);
@@ -119,7 +136,7 @@ Result UCS::solve()
             processQueue.push(newNode);
         }
     }
-    
+
     auto eTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> duration = eTime - sTime;
     result.found = false;

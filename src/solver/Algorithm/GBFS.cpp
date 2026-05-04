@@ -129,6 +129,17 @@ Result GBFS::solve()
             processQueue.push(newNode);
         }
     }
+
+    auto eTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float, std::milli> duration = eTime - sTime;
+    Result result;
+    result.found = false;
+    result.time = duration.count();
+    result.totalCost = 0;
+    result.iterations = static_cast<int>(expandedNodes.size());
+    result.expandedPaths = expandedNodes;
+
+    return result;
 }
 
 void GBFS::playSolution(Board board, const std::vector<Node>& pathSolution) {

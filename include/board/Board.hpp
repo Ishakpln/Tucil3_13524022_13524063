@@ -15,6 +15,7 @@ private:
     Point startPosition;
     Point finishPosition;
     std::vector<CheckpointDistances> checkpointDistances;
+    void countCheckpointDist();
 
 public:
     Board();

@@ -38,6 +38,9 @@ namespace {
         if (input == "Manhattan_checkpoint") {
             return HeuristicType::MANHATTAN_CHECKPOINT;
         }
+        if (input == "Realdist_checkpoint" || input == "REALDIST_CHECKPOINT") {
+            return HeuristicType::REALDIST_CHECKPOINT;
+        }
         //more to come
         throw invalid_argument("Choose only available valid given heuristics");
     }
@@ -71,6 +74,8 @@ namespace {
                 return "Manhattan_min";
             case HeuristicType::MANHATTAN_CHECKPOINT:
                 return "Manhattan_checkpoint";
+            case HeuristicType::REALDIST_CHECKPOINT:
+                return "Realdist_checkpoint";
             case HeuristicType::SENTINEL:
                 break;
         }
@@ -158,7 +163,7 @@ int main() {
     }
 
     while (true) {
-        cout << "Pilih heuristic (Euclidean_min/Euclidean_checkpoint/Manhattan_min/Manhattan_checkpoint): ";
+        cout << "Pilih heuristic (Euclidean_min/Euclidean_checkpoint/Manhattan_min/Manhattan_checkpoint/Realdist_checkpoint): ";
         getline(cin, heuristicInput);
 
         try {

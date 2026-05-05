@@ -149,7 +149,6 @@ Board loadBoard(const std::string& filename) {
                 digit,
                 digitPositions[digit],
                 0,
-                0,
                 0
             });
         }
@@ -158,7 +157,6 @@ Board loadBoard(const std::string& filename) {
     checkpointDistances.push_back({
         -1,
         finishPosition,
-        0,
         0,
         0
     });

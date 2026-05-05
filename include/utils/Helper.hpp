@@ -62,7 +62,6 @@ struct CheckpointDistances {
     Point position;
     float euclideanDist; //jarak ke checkpoint selanjutnya euclidean
     float manhattanDist; //jarak ke checkpoiint selanjutnya manhattan
-    int realDist;
 };
 
 enum class AlgorithmType {
@@ -79,7 +78,6 @@ enum class HeuristicType {
     EUCLIDEAN_CHECKPOINT,
     MANHATTAN_MIN,
     MANHATTAN_CHECKPOINT,
-    REALDIST_CHECKPOINT,
     SENTINEL
 };
 

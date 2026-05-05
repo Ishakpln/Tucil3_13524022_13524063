@@ -3,8 +3,6 @@
 #include <stdexcept>
 #include "board/Board.hpp"
 #include <limits>
-#include <queue>
-#include <unordered_map>
 
 using namespace std;
 Board::Board(){};
@@ -156,54 +154,7 @@ void Board::printBoardWithPlayer(Point playerPosition) const {
 }
 
 void Board::countCheckpointDist() {
-    struct QueueEntry {
-        Node node;
-        int cost;
-    };
-
-    struct CompareQueueEntry {
-        bool operator()(const QueueEntry& a, const QueueEntry& b) const {
-            return a.cost > b.cost;
-        }
-    };
-
-    auto getStateKey = [](const Node& node) {
-        return std::to_string(node.position.x) + "," +
-               std::to_string(node.position.y) + "," +
-               std::to_string(node.targetIndex);
-    };
-
-    auto isTargetReached = [this](const Node& node, int nextCheckpointIndex) {
-        if (node.targetIndex > nextCheckpointIndex) {
-            return true;
-        }
-
-        return checkpointDistances[nextCheckpointIndex].index < 0 &&
-               node.position == checkpointDistances[nextCheckpointIndex].position;
-    };
-
-    Direction directions[] = {
-        Direction::U,
-        Direction::D,
-        Direction::L,
-        Direction::R
-    };
-
     for (int i = 0; i + 1 < static_cast<int>(checkpointDistances.size()); i++) {
-        Node startNode;
-        startNode.position = checkpointDistances[i].position;
-        startNode.targetIndex = i + 1;
-        startNode.gCost = 0;
-        startNode.hCost = 0;
-        startNode.fCost = 0;
-        startNode.parentIndex = -1;
-        startNode.move = Direction::U;
-
-        std::priority_queue<QueueEntry, std::vector<QueueEntry>, CompareQueueEntry> processQueue;
-        std::unordered_map<std::string, int> bestCost;
-
-        processQueue.push({startNode, 0});
-
         checkpointDistances[i].euclideanDist = getEuclideanDist(
             checkpointDistances[i].position,
             checkpointDistances[i + 1].position,
@@ -214,58 +165,11 @@ void Board::countCheckpointDist() {
             checkpointDistances[i + 1].position,
             minCost
         );
-        checkpointDistances[i].realDist = static_cast<int>(checkpointDistances[i].manhattanDist);
-
-        while (!processQueue.empty()) {
-            QueueEntry current = processQueue.top();
-            processQueue.pop();
-
-            std::string currentKey = getStateKey(current.node);
-
-            if (bestCost.find(currentKey) != bestCost.end() &&
-                bestCost[currentKey] <= current.cost) {
-                continue;
-            }
-
-            bestCost[currentKey] = current.cost;
-
-            if (isTargetReached(current.node, i + 1)) {
-                checkpointDistances[i].realDist = current.cost;
-                break;
-            }
-
-            for (Direction direction : directions) {
-                SlideResult slideResult = slideTo(current.node, direction);
-
-                if (slideResult.isGameOver) {
-                    continue;
-                }
-
-                Node nextNode;
-                nextNode.position = slideResult.position;
-                nextNode.targetIndex = slideResult.targetIndex;
-                nextNode.gCost = current.cost + slideResult.cost;
-                nextNode.hCost = 0;
-                nextNode.fCost = 0;
-                nextNode.parentIndex = -1;
-                nextNode.move = direction;
-
-                std::string nextKey = getStateKey(nextNode);
-
-                if (bestCost.find(nextKey) != bestCost.end() &&
-                    bestCost[nextKey] <= nextNode.gCost) {
-                    continue;
-                }
-
-                processQueue.push({nextNode, nextNode.gCost});
-            }
-        }
     }
 
     if (!checkpointDistances.empty()) {
         checkpointDistances.back().euclideanDist = 0;
         checkpointDistances.back().manhattanDist = 0;
-        checkpointDistances.back().realDist = 0;
     }
 
 }

@@ -6,7 +6,7 @@ float heuristic(Point start, int index /*lagi ngejar apa sekarang*/, HeuristicTy
         float distance = 0;
         distance += getEuclideanDist(start, board.getCheckpointDistance(index).position, board.getMinCost());
         for (int i = index;i < board.getCheckpointCount()-1;i++) {
-            distance += board.getCheckpointDistance(i).realDist;
+            distance += board.getCheckpointDistance(i).euclideanDist;
         }
         return distance;
     }
@@ -14,16 +14,9 @@ float heuristic(Point start, int index /*lagi ngejar apa sekarang*/, HeuristicTy
         float distance = 0;
         distance += getManhattanDist(start, board.getCheckpointDistance(index).position, board.getMinCost());
         for (int i = index;i < board.getCheckpointCount()-1;i++) {
-            distance += board.getCheckpointDistance(i).realDist;
+            distance += board.getCheckpointDistance(i).manhattanDist;
         }
         return distance;  
-    }
-    else if (type == HeuristicType::REALDIST_CHECKPOINT) {
-        float distance = 0;
-        for (int i = index;i < board.getCheckpointCount()-1;i++) {
-            distance += board.getCheckpointDistance(i).realDist;
-        }
-        return distance;
     }
     else if (type == HeuristicType::EUCLIDEAN_MIN) {
         return getEuclideanDist(start, board.getFinishPosition(), board.getMinCost());

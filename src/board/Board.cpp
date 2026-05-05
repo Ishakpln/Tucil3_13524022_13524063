@@ -245,7 +245,7 @@ SlideResult Board::slideTo(Node start, Direction direction) const {
         }
 
         if (nextTile == 'O') {
-            if (targetIndex >= static_cast<int>(checkpointDistances.size()) || getNumber(targetIndex) != 'O') {
+            if (targetIndex >= static_cast<int>(checkpointDistances.size())) {
                 return {
                     currPoint,
                     targetIndex,

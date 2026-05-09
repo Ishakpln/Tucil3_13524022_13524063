@@ -2,11 +2,18 @@
 
 MainMenu::MainMenu(GameState& gs):
     gameState(gs),
-    manualBtn({500, 280, 200, 50}, 0, "Play Manual", BLACK, BLACK),
-    algoBtn({500, 420, 200, 50}, 159, "Play Algorithm", BLACK, BLACK),
-    cmapBtn({500, 350, 200, 50}, 96, "Map Editor", BLACK, BLACK),
-    title(300, 10, "Ice Sliding"){}
-void MainMenu::update(){}
+    manualBtn((Rectangle){(GetScreenWidth() - BUTTON_WIDTH)/2.0f, GetScreenHeight()/3.0f, BUTTON_WIDTH, BUTTON_HEIGHT}, 131, "Play Manual", BLACK, BLACK, TEXT_BTN_SIZE),
+    algoBtn((Rectangle){(GetScreenWidth() - BUTTON_WIDTH)/2.0f, GetScreenHeight()/3.0f + BUTTON_HEIGHT + BUTTON_GAP, BUTTON_WIDTH, BUTTON_HEIGHT}, 159, "Play Algorithm", BLACK, BLACK, TEXT_BTN_SIZE),
+    cmapBtn((Rectangle){(GetScreenWidth() - BUTTON_WIDTH)/2.0f, GetScreenHeight()/3.0f + (BUTTON_HEIGHT + BUTTON_GAP)*2 , BUTTON_WIDTH, BUTTON_HEIGHT}, 96, "Map Editor", BLACK, BLACK, TEXT_BTN_SIZE),
+    title((GetScreenWidth() + MeasureText("Ice Sliding", TITLE_SIZE))/2, GetScreenHeight()/6.0f, "Ice Sliding", TITLE_SIZE){}
+
+void MainMenu::update()
+{
+    this->manualBtn.setBounds((Rectangle){(GetScreenWidth() - BUTTON_WIDTH)/2.0f, GetScreenHeight()/3.0f, BUTTON_WIDTH, BUTTON_HEIGHT});
+    this->algoBtn.setBounds((Rectangle){(GetScreenWidth() - BUTTON_WIDTH)/2.0f, GetScreenHeight()/3.0f + BUTTON_HEIGHT + BUTTON_GAP, BUTTON_WIDTH, BUTTON_HEIGHT});
+    this->cmapBtn.setBounds((Rectangle){(GetScreenWidth() - BUTTON_WIDTH)/2.0f, GetScreenHeight()/3.0f + (BUTTON_HEIGHT + BUTTON_GAP)*2, BUTTON_WIDTH, BUTTON_HEIGHT});
+    this->title.setPosition((GetScreenWidth() - MeasureText("Ice Sliding", TITLE_SIZE))/2, GetScreenHeight()/6.0f);
+}
 void MainMenu::draw()
 {
     title.draw();

@@ -1,12 +1,11 @@
 #include "library/raygui.h"
 #include "view/components/MenuButton.hpp"
 
-MenuButton::MenuButton(Rectangle bounds, int iconId, const char* text, Color textColor, Color iconCol):bounds(bounds), iconId(iconId), text(text), textColor(textColor) {}
+MenuButton::MenuButton(Rectangle bounds, int iconId, const char* text, Color textColor, Color iconCol, int fSize):bounds(bounds), iconId(iconId), text(text), textColor(textColor), fSize(fSize) {}
 
 bool MenuButton::draw()
 {
-    bool pressed = GuiButton(this->bounds, this->text);
-    if (this->iconId > 0) GuiDrawIcon(this->iconId, this->bounds.x + 4, this->bounds.y + 4, 4, this-> iconColor);
+    bool pressed = GuiButton(this->bounds, GuiIconText(this->iconId, this->text));
     return pressed;
 }
 

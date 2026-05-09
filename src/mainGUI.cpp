@@ -1,5 +1,13 @@
 #include "raylib.h"
-// #include "view/AppState.hpp"
+#include "library/raygui.h"
+#include "view/GameController.hpp"
+#include "view/SceneManager.hpp"
+#include "view/components/ArrowButton.hpp"
+#include "view/components/DescriptionPanel.hpp"
+#include "view/components/MenuButton.hpp"
+#include "view/components/Popup.hpp"
+#include "view/components/Title.hpp"
+#include "view/components/TransitionEffect.hpp"
 
 int main()
 {
@@ -8,11 +16,17 @@ int main()
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "TEST_WINDOW");
 
+    GameState gs;
+    GameController gc;
+    SceneManager sceneManager(gs, gc);
+
     while(!WindowShouldClose())
     {
+        float dt = GetFrameTime();
+        sceneManager.update();
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        DrawText("Hello World", 400, 300, 50, BLACK);
+        sceneManager.draw();
         EndDrawing();
     }
 

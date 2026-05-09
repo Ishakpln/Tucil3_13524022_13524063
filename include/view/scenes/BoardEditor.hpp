@@ -2,13 +2,13 @@
 #include "view/Scene.hpp"
 #include "view/GameState.hpp"
 
-class ChoosePlayer : public Scene
+class BoardEditor : public Scene
 {
 private:
     GameState& gameState;
 
 public:
-    ChoosePlayer(GameState& gs);
+    BoardEditor(GameState& gs);
     void update() override;
     void draw() override;
     SceneType nextScene() override;

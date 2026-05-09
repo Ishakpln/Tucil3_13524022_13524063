@@ -4,17 +4,17 @@ enum class SceneType
 {
     MainMenu,
     ChoosePlayer,
-    SelectMap,
+    SelectBoard,
     ManualPlay,
     AlgoPlay,
-    MapEditor
+    BoardEditor
 };
 
 class Scene
 {
-    public:
-        ~Scene() = default;
-        virtual void update() = 0;
-        virtual void draw() = 0;
-        virtual SceneType nextScene() = 0;
+public:
+    ~Scene() = default;
+    virtual void update() = 0;
+    virtual void draw() = 0;
+    virtual SceneType nextScene() = 0;
 };

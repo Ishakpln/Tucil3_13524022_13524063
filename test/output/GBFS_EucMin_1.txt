@@ -1,0 +1,27 @@
+Problem:
+8 12
+XXXXXXXXXXXX
+XZ***0****OX
+X*XX*X*XX**X
+X**********X
+X**X*XX*X**X
+X1********2X
+X***L***X**X
+XXXXXXXXXXXX
+999 999 999 999 999 999 999 999 999 999 999 999
+999 2 7 4 6 1 8 3 5 9 2 999
+999 5 999 999 3 999 4 999 999 6 7 999
+999 1 8 2 7 4 6 3 9 5 2 999
+999 6 3 999 8 2 999 999 4 999 7 999
+999 3 9 5 1 6 2 8 4 7 5 999
+999 4 2 7 3 5 9 1 6 999 8 999
+999 999 999 999 999 999 999 999 999 999 999 999
+
+Solution:
+Algorithm     : GBFS
+Heuristic     : Euc Min
+Found         : Yes
+Move solution : RLDURDU
+Total cost    : 223
+Time          : 0.0766 ms
+Iterations    : 7

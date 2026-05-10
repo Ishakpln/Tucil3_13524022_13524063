@@ -156,7 +156,7 @@ namespace
 AlgoPlay::AlgoPlay(GameState &gs): 
     gameState(gs),
     renderer(gs.getPlayerType()),
-    playerMotion(3.0f),
+    playerMotion(15.0f),
     requestedScene(SceneType::AlgoPlay),
     selectedAlgorithm(AlgorithmType::ASTAR),
     selectedHeuristic(HeuristicType::MANHATTAN_CHECKPOINT),

@@ -9,6 +9,8 @@ Player::Player(std::string typeName)
     for (int i = 1; i <= 3; ++i) {
         std::string path = "./assets/players/" + playerType + "/" + std::to_string(i) + ".png";
         if (!FileExists(path.c_str()) && i > 1) {
+            // Some future/incomplete player folders may not contain all 3 images yet.
+            // Reuse frame 1 so animation logic still stays 1-2-1-3 without crashing.
             path = "./assets/players/" + playerType + "/1.png";
         }
         frames.emplace_back(path);
@@ -60,6 +62,7 @@ void Player::drawAtTilePosition(float boardX, float boardY, float tileSize, floa
 
     Rectangle src = AssetUtils::fullTextureSource(frames[frameIndex].get());
 
+    // Use the tile center as the origin so left/right/down rotations do not shift the player.
     Rectangle dst{x + tileSize / 2.0f, y + tileSize / 2.0f, tileSize, tileSize};
     Vector2 origin{tileSize / 2.0f, tileSize / 2.0f};
     DrawTexturePro(frames[frameIndex].get(), src, dst, origin, rotationDegrees, WHITE);

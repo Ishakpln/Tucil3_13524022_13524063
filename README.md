@@ -29,3 +29,20 @@ GUI asset rendering notes
 - Board logic still uses X, *, L, Z, O, and 0-9. Asset classes only affect rendering.
 - Build GUI with raylib installed: make clean && make rung
 - Build CLI only: make clean && make cli
+
+## Board Editor GUI
+
+The Board Editor scene can create or edit files in the same format as `test/1.txt`.
+
+Controls:
+- Click a component button (`X`, `*`, `L`, `Z`, `O`, `0`-`9`) and left-click a board cell to paint it.
+- Right-click a board cell to select it without painting.
+- Click a cell in the cost grid to select the tile cost.
+- `X` obstacle costs are fixed to `999`; other tile costs can be edited in the cost value box.
+- Use the row/column value boxes and `APPLY SIZE` to resize the editable board.
+- `SAVE BOARD` opens a popup. Press `OK` to write `./test/<board-name>.txt` and return to board selection.
+
+Validation before saving:
+- Exactly one `Z` start and one `O` goal.
+- Checkpoint digits must start from `0` and be contiguous.
+- Costs must be non-negative.

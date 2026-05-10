@@ -1,53 +1,76 @@
 #include "view/scenes/ChoosePlayer.hpp"
-#include <iostream>
-#define IMAGE_SCALE 1.5
-#define ARROW_GAP 300
-#define ARROW_HEIGHT 200
-#define ARROW_WIDTH 200
+#include "library/raygui.h"
 #define TITLE_SIZE 40
 #define PLAYER_SIZE 200
+#define BUTTON_W 150
+#define BUTTON_H 50
 
 ChoosePlayer::ChoosePlayer(GameState& gs):
     gameState(gs),
-    lBtn((Rectangle){0, 1920/3.0f, 1920/2, 1920/3}, (Rectangle){(GetScreenWidth() - ARROW_GAP)/2.0F - ARROW_WIDTH, (GetScreenHeight() - ARROW_HEIGHT)/2.0f, ARROW_WIDTH, ARROW_HEIGHT}, "./assets/components/arrow.png", (Vector2){0,0}),
-    rBtn((Rectangle){1920/2, 1920/3.0f, 1920/2, 1920/3}, (Rectangle){(GetScreenWidth() + ARROW_GAP)/2.0F, (GetScreenHeight() - ARROW_HEIGHT)/2.0f, ARROW_WIDTH, ARROW_HEIGHT}, "./assets/components/arrow.png", (Vector2){0,0}),
-    pImage((Rectangle){0,0, 600, 600}, (Rectangle){(GetScreenWidth() - PLAYER_SIZE)/2.0F, (GetScreenHeight() - PLAYER_SIZE)/2.0f, PLAYER_SIZE, PLAYER_SIZE}, "./assets/players/Baby/1.png", (Vector2){0,0}),
-    title((GetScreenWidth() - MeasureText("Choose Your Player", TITLE_SIZE))/2.0f, GetScreenHeight()/6.0f, "Choose Your Player", TITLE_SIZE),
-    rlmove(false)
-    {}
+    title((GetScreenWidth() - MeasureText("Choose Player", TITLE_SIZE))/2.0f, GetScreenHeight()/6.0f, "Choose Player", TITLE_SIZE),
+    playerTypes({"Baby", "Fire"}),
+    selectedIndex(0),
+    previewPlayer(nullptr),
+    requestedScene(SceneType::ChoosePlayer)
+{
+    for (int i = 0; i < static_cast<int>(playerTypes.size()); ++i) {
+        if (playerTypes[i] == gameState.getPlayerType()) {
+            selectedIndex = i;
+            break;
+        }
+    }
+    rebuildPreviewPlayer();
+}
+
+void ChoosePlayer::rebuildPreviewPlayer() {
+    previewPlayer = createPlayerByType(playerTypes[selectedIndex]);
+}
+
+SceneType ChoosePlayer::playgroundScene() const {
+    return gameState.getPlayMode() == PlayMode::ALGORITHM ? SceneType::AlgoPlay : SceneType::ManualPlay;
+}
 
 void ChoosePlayer::update()
 {
-    this->lBtn.setDestBounds((Rectangle){(GetScreenWidth() - ARROW_GAP)/2.0F - ARROW_WIDTH, (GetScreenHeight() - ARROW_HEIGHT)/2.0f, ARROW_WIDTH, ARROW_HEIGHT});
-    this->rBtn.setDestBounds((Rectangle){(GetScreenWidth() + ARROW_GAP)/2.0F, (GetScreenHeight() - ARROW_HEIGHT)/2.0f, ARROW_WIDTH, ARROW_HEIGHT});
-    this->title.setPosition((GetScreenWidth() - MeasureText("Choose Your Player", TITLE_SIZE))/2.0f, GetScreenHeight()/6.0f);
-    this->pImage.setDestBounds((Rectangle){(GetScreenWidth() - PLAYER_SIZE)/2.0F, (GetScreenHeight() - PLAYER_SIZE)/2.0f, PLAYER_SIZE, PLAYER_SIZE});
-
-    std::string path1 = "./assets/players/Ball/Ball1.png";
-    std::string path2 = "./assets/players/Baby/1.png";
-    if (this->lBtn.isClicked()) { this->rlmove = !this->rlmove; }
-    if (this->rBtn.isClicked()) { this->rlmove = !this->rlmove; }
-
-    if (this->rlmove) this->pImage.setImagePath(path1.c_str());
-    else this->pImage.setImagePath(path2.c_str());
+    this->title.setPosition((GetScreenWidth() - MeasureText("Choose Player", TITLE_SIZE))/2.0f, GetScreenHeight()/6.0f);
+    if (previewPlayer) {
+        previewPlayer->update(GetFrameTime(), true);
+    }
 }
 void ChoosePlayer::draw()
 {
-    this->lBtn.draw();
-    this->rBtn.draw();
+    const float centerX = GetScreenWidth() / 2.0f;
+    const float centerY = GetScreenHeight() / 2.0f;
+
+    if (GuiButton(Rectangle{20, 20, 150, 45}, "Main Menu")) {
+        gameState.reset();
+        requestedScene = SceneType::MainMenu;
+    }
+
     this->title.draw();
-    this->pImage.draw();
+
+    if (GuiButton(Rectangle{centerX - 270.0f, centerY - 25.0f, 80.0f, 80.0f}, "<")) {
+        selectedIndex = (selectedIndex - 1 + static_cast<int>(playerTypes.size())) % static_cast<int>(playerTypes.size());
+        rebuildPreviewPlayer();
+    }
+    if (GuiButton(Rectangle{centerX + 190.0f, centerY - 25.0f, 80.0f, 80.0f}, ">")) {
+        selectedIndex = (selectedIndex + 1) % static_cast<int>(playerTypes.size());
+        rebuildPreviewPlayer();
+    }
+
+    DrawText(playerTypes[selectedIndex].c_str(), static_cast<int>(centerX - MeasureText(playerTypes[selectedIndex].c_str(), 26) / 2.0f), static_cast<int>(centerY - 170.0f), 26, BLACK);
+
+    if (previewPlayer) {
+        previewPlayer->drawAt(centerX - PLAYER_SIZE / 2.0f, centerY - PLAYER_SIZE / 2.0f, PLAYER_SIZE, 0, 0);
+    }
+
+    if (GuiButton(Rectangle{centerX - BUTTON_W / 2.0f, centerY + 180.0f, BUTTON_W, BUTTON_H}, "OK")) {
+        gameState.setPlayerType(playerTypes[selectedIndex]);
+        gameState.setPlayerSelected(true);
+        requestedScene = gameState.isBoardSelected() ? playgroundScene() : SceneType::SelectBoard;
+    }
 }
 SceneType ChoosePlayer::nextScene()
 {
-    if (this->gameState.isPlayerSelected())
-    {
-        if (this->gameState.getPlayMode() == PlayMode::ALGORITHM) return SceneType::AlgoPlay;
-        else if (this->gameState.getPlayMode() == PlayMode::MANUAL) return SceneType::ManualPlay;
-        else return SceneType::MainMenu;
-    }
-    else
-    {
-        return SceneType::ChoosePlayer;
-    }
+    return requestedScene;
 }

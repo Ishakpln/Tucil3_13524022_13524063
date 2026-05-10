@@ -2,16 +2,23 @@
 #include "view/Scene.hpp"
 #include "view/GameState.hpp"
 #include "view/components/Title.hpp"
-#include "view/components/ImageTexture.hpp"
+#include "view/assets/Player.hpp"
+#include <memory>
+#include <string>
+#include <vector>
+
 class ChoosePlayer : public Scene
 {
 private:
     GameState &gameState;
-    ImageTexture lBtn;
-    ImageTexture rBtn;
-    ImageTexture pImage;
     Title title;
-    bool rlmove;
+    std::vector<std::string> playerTypes;
+    int selectedIndex;
+    std::unique_ptr<Player> previewPlayer;
+    SceneType requestedScene;
+
+    void rebuildPreviewPlayer();
+    SceneType playgroundScene() const;
 
 public:
     ChoosePlayer(GameState &gs);

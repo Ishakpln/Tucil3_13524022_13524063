@@ -19,8 +19,10 @@ public:
     bool isPlayerSelected() const;
     PlayMode getPlayMode() const;
     Board getBoard() const;
+    const Board& getBoardRef() const;
     bool isBoardSelected() const;
     const char* getStringPath() const;
+    const std::string& getPlayerType() const;
     bool isGameOver() const;
     bool isWinning() const;
     bool isResultGenerated() const;
@@ -29,9 +31,11 @@ public:
     const char* getErrorMessage() const;
 
     void setPlayMode(PlayMode p);
-    void setBoard(Board& b);
-    bool setBoardSelected(bool nVal);
+    void setBoard(const Board& b);
+    void setBoardSelected(bool nVal);
     void setStringPath(std::string newPath);
+    void setPlayerSelected(bool nVal);
+    void setPlayerType(std::string newType);
     void setGameOver(bool nVal);
     void setWinning(bool nVal);
     void setIsResultGenerated(bool nVal);
@@ -51,7 +55,7 @@ private:
     Board board;
 
     bool playerSelected;
-    std::string playerImagePath;
+    std::string playerType;
     bool gameOver;
     bool winning;
     bool resultGenerated;

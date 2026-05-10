@@ -23,3 +23,9 @@ sudo make install
 run gui from wsl
 make clean && make rung
 *make run untuk cli, rung untuk gui
+GUI asset rendering notes
+- Runtime working directory should be the repository root, so paths like ./assets/components and ./assets/players are valid.
+- GUI assets are loaded through RAII wrappers in include/view/assets and src/view/assets, not inside the frame loop.
+- Board logic still uses X, *, L, Z, O, and 0-9. Asset classes only affect rendering.
+- Build GUI with raylib installed: make clean && make rung
+- Build CLI only: make clean && make cli

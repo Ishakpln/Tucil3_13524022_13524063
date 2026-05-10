@@ -5,7 +5,7 @@
 ManualPlay::ManualPlay(GameState &gs): 
     gameState(gs),
     renderer(gs.getPlayerType()),
-    playerMotion(8.0f),
+    playerMotion(3.0f),
     playerPosition(gs.isBoardSelected() ? gs.getBoardRef().getStartPosition() : Point{-1, -1}),
     targetIndex(0),
     requestedScene(SceneType::ManualPlay),

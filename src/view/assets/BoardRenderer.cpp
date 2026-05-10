@@ -227,7 +227,6 @@ void BoardRenderer::drawBoard(const Board& board, Rectangle bounds, Point player
 
     BoardLayout layout = calculateLayout(board, bounds);
 
-    // Floor is drawn below every logical tile; overlays below do not mutate backend Board chars.
     for (int row = 0; row < board.getRows(); ++row) {
         for (int col = 0; col < board.getCols(); ++col) {
             const float x = layout.x + col * layout.tileSize;

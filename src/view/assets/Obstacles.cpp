@@ -3,8 +3,17 @@
 #include <string>
 
 namespace {
-    float rotationFromDownVectorToCenter(int row, int col, int widthTiles, int heightTiles,
-                                         int boardRows, int boardCols) {
+    float snapToPerpendicularAngle(float angle) {
+        float snapped = std::round(angle / 90.0f) * 90.0f;
+
+        if (snapped >= 360.0f) snapped -= 360.0f;
+        if (snapped <= -360.0f) snapped += 360.0f;
+        if (std::abs(snapped) < 0.001f) snapped = 0.0f;
+
+        return snapped;
+    }
+
+    float rotationFromDownVectorToCenter(int row, int col, int widthTiles, int heightTiles, int boardRows, int boardCols) {
         const float objectCenterX = col + widthTiles / 2.0f;
         const float objectCenterY = row + heightTiles / 2.0f;
         const float boardCenterX = boardCols / 2.0f;
@@ -17,8 +26,9 @@ namespace {
             return 0.0f;
         }
 
-        // Asset default faces downward (+Y). atan2(dx, dy) gives rotation from +Y to target vector.
-        return std::atan2(dx, dy) * RAD2DEG;
+        float angle = std::atan2(dx, dy) * RAD2DEG;
+
+        return snapToPerpendicularAngle(angle);
     }
 }
 

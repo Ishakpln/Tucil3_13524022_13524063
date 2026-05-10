@@ -21,9 +21,77 @@ namespace
         return "?";
     }
 
-    bool algorithmButton(Rectangle bounds, AlgorithmType current, AlgorithmType algorithm)
+    const char* heuristicLabel(HeuristicType heuristic)
     {
-        return GuiButton(bounds, TextFormat("%s%s", current == algorithm ? ">" : "", algorithmLabel(algorithm)));
+        switch (heuristic)
+        {
+            case HeuristicType::EUCLIDEAN_MIN: return "Euc Min";
+            case HeuristicType::EUCLIDEAN_CHECKPOINT: return "Euc CP";
+            case HeuristicType::MANHATTAN_MIN: return "Man Min";
+            case HeuristicType::MANHATTAN_CHECKPOINT: return "Man CP";
+            case HeuristicType::SENTINEL: break;
+        }
+
+        return "?";
+    }
+
+    bool usesHeuristic(AlgorithmType algorithm)
+    {
+        return algorithm == AlgorithmType::ASTAR || algorithm == AlgorithmType::GBFS;
+    }
+
+    int algorithmToIndex(AlgorithmType algorithm)
+    {
+        switch (algorithm)
+        {
+            case AlgorithmType::ASTAR: return 0;
+            case AlgorithmType::UCS: return 1;
+            case AlgorithmType::GBFS: return 2;
+            case AlgorithmType::BFS: return 3;
+            case AlgorithmType::DFS: return 4;
+            case AlgorithmType::SENTINEL: break;
+        }
+
+        return 0;
+    }
+
+    AlgorithmType algorithmFromIndex(int index)
+    {
+        switch (index)
+        {
+            case 0: return AlgorithmType::ASTAR;
+            case 1: return AlgorithmType::UCS;
+            case 2: return AlgorithmType::GBFS;
+            case 3: return AlgorithmType::BFS;
+            case 4: return AlgorithmType::DFS;
+            default: return AlgorithmType::ASTAR;
+        }
+    }
+
+    int heuristicToIndex(HeuristicType heuristic)
+    {
+        switch (heuristic)
+        {
+            case HeuristicType::MANHATTAN_CHECKPOINT: return 0;
+            case HeuristicType::MANHATTAN_MIN: return 1;
+            case HeuristicType::EUCLIDEAN_CHECKPOINT: return 2;
+            case HeuristicType::EUCLIDEAN_MIN: return 3;
+            case HeuristicType::SENTINEL: break;
+        }
+
+        return 0;
+    }
+
+    HeuristicType heuristicFromIndex(int index)
+    {
+        switch (index)
+        {
+            case 0: return HeuristicType::MANHATTAN_CHECKPOINT;
+            case 1: return HeuristicType::MANHATTAN_MIN;
+            case 2: return HeuristicType::EUCLIDEAN_CHECKPOINT;
+            case 3: return HeuristicType::EUCLIDEAN_MIN;
+            default: return HeuristicType::MANHATTAN_CHECKPOINT;
+        }
     }
 }
 
@@ -34,6 +102,8 @@ AlgoPlay::AlgoPlay(GameState &gs):
     requestedScene(SceneType::AlgoPlay),
     selectedAlgorithm(AlgorithmType::ASTAR),
     selectedHeuristic(HeuristicType::MANHATTAN_CHECKPOINT),
+    algorithmDropdownEditMode(false),
+    heuristicDropdownEditMode(false),
     currentStep(0),
     playbackTimer(0.0f),
     playing(false),
@@ -161,29 +231,46 @@ void AlgoPlay::draw()
         requestedScene = SceneType::ChoosePlayer;
     }
 
-    if (algorithmButton(Rectangle{20, 200, 70, 36}, selectedAlgorithm, AlgorithmType::ASTAR))
-        selectedAlgorithm = AlgorithmType::ASTAR;
-    if (algorithmButton(Rectangle{100, 200, 70, 36}, selectedAlgorithm, AlgorithmType::UCS))
-        selectedAlgorithm = AlgorithmType::UCS;
-    if (algorithmButton(Rectangle{20, 245, 70, 36}, selectedAlgorithm, AlgorithmType::GBFS))
-        selectedAlgorithm = AlgorithmType::GBFS;
-    if (algorithmButton(Rectangle{100, 245, 70, 36}, selectedAlgorithm, AlgorithmType::BFS))
-        selectedAlgorithm = AlgorithmType::BFS;
-    if (algorithmButton(Rectangle{20, 290, 70, 36}, selectedAlgorithm, AlgorithmType::DFS))
-        selectedAlgorithm = AlgorithmType::DFS;
-    if (GuiButton(Rectangle{100, 290, 70, 36}, "Run"))
-        runSolver();
+    DrawText("Algorithm", 20, 198, 18, Theme::Text);
+    DrawText("Heuristic", 20, 272, 18, usesHeuristic(selectedAlgorithm) ? Theme::Text : Fade(Theme::Text, 0.45f));
+    if (!usesHeuristic(selectedAlgorithm))
+    {
+        DrawText("Only A*/GBFS", 20, 294, 13, Fade(Theme::Text, 0.55f));
+    }
 
-    if (GuiButton(Rectangle{20, 345, 70, 36}, playing ? "Pause" : "Play"))
-        playing = !playing;
-    if (GuiButton(Rectangle{100, 345, 70, 36}, "Next") && gameState.isHasResult())
+    const bool dropdownOpen = algorithmDropdownEditMode || heuristicDropdownEditMode;
+    if (!dropdownOpen)
     {
-        moveToStep(currentStep + 1);
+        if (GuiButton(Rectangle{20, 345, 150, 40}, "Run"))
+            runSolver();
+
+        if (GuiButton(Rectangle{20, 410, 70, 36}, playing ? "Pause" : "Play"))
+            playing = !playing;
+        if (GuiButton(Rectangle{100, 410, 70, 36}, "Next") && gameState.isHasResult())
+        {
+            moveToStep(currentStep + 1);
+        }
+        if (GuiButton(Rectangle{20, 455, 70, 36}, "Prev"))
+        {
+            moveToStep(currentStep - 1);
+        }
     }
-    if (GuiButton(Rectangle{20, 390, 70, 36}, "Prev"))
+
+    int heuristicActive = heuristicToIndex(selectedHeuristic);
+    if (GuiDropdownBox(Rectangle{20, 306, 150, 36}, "Man CP;Man Min;Euc CP;Euc Min", &heuristicActive, heuristicDropdownEditMode))
     {
-        moveToStep(currentStep - 1);
+        heuristicDropdownEditMode = !heuristicDropdownEditMode;
+        if (heuristicDropdownEditMode) algorithmDropdownEditMode = false;
     }
+    selectedHeuristic = heuristicFromIndex(heuristicActive);
+
+    int algorithmActive = algorithmToIndex(selectedAlgorithm);
+    if (GuiDropdownBox(Rectangle{20, 222, 150, 36}, "A*;UCS;GBFS;BFS;DFS", &algorithmActive, algorithmDropdownEditMode))
+    {
+        algorithmDropdownEditMode = !algorithmDropdownEditMode;
+        if (algorithmDropdownEditMode) heuristicDropdownEditMode = false;
+    }
+    selectedAlgorithm = algorithmFromIndex(algorithmActive);
 
     Rectangle boardBounds{200.0f, 80.0f, GetScreenWidth() - 230.0f, GetScreenHeight() - 150.0f};
     if (gameState.isBoardSelected())
@@ -200,7 +287,8 @@ void AlgoPlay::draw()
     if (gameState.isHasResult())
     {
         SolveResult result = gameState.getResult();
-        DrawText(TextFormat("%s | Found: %s | Cost: %d | Moves: %s", algorithmLabel(result.algorithm), result.isFound ? "Yes" : "No", result.cost, result.moves.c_str()),
+        const char* heuristicText = usesHeuristic(result.algorithm) ? heuristicLabel(result.heuristic) : "-";
+        DrawText(TextFormat("%s | H: %s | Found: %s | Cost: %d | Moves: %s", algorithmLabel(result.algorithm), heuristicText, result.isFound ? "Yes" : "No", result.cost, result.moves.c_str()),
                  200, GetScreenHeight() - 32, 18, Theme::Text);
         DrawText(TextFormat("Step: %d/%d | Time: %.3f ms | Iterations: %d", currentStep,
                             static_cast<int>(result.pathSolution.size()) > 0 ? static_cast<int>(result.pathSolution.size()) - 1 : 0,

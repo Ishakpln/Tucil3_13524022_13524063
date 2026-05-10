@@ -13,6 +13,8 @@ private:
     SceneType requestedScene;
     AlgorithmType selectedAlgorithm;
     HeuristicType selectedHeuristic;
+    bool algorithmDropdownEditMode;
+    bool heuristicDropdownEditMode;
     int currentStep;
     float playbackTimer;
     bool playing;

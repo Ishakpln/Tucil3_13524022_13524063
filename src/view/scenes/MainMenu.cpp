@@ -1,4 +1,9 @@
 #include "view/scenes/MainMenu.hpp"
+#define BUTTON_GAP 10
+#define BUTTON_HEIGHT 100
+#define BUTTON_WIDTH 400
+#define TITLE_SIZE 40
+#define TEXT_BTN_SIZE 28
 
 MainMenu::MainMenu(GameState& gs):
     gameState(gs),
@@ -9,16 +14,19 @@ MainMenu::MainMenu(GameState& gs):
 
 void MainMenu::update()
 {
-    this->manualBtn.setBounds((Rectangle){(GetScreenWidth() - BUTTON_WIDTH)/2.0f, GetScreenHeight()/3.0f, BUTTON_WIDTH, BUTTON_HEIGHT});
-    this->algoBtn.setBounds((Rectangle){(GetScreenWidth() - BUTTON_WIDTH)/2.0f, GetScreenHeight()/3.0f + BUTTON_HEIGHT + BUTTON_GAP, BUTTON_WIDTH, BUTTON_HEIGHT});
-    this->cmapBtn.setBounds((Rectangle){(GetScreenWidth() - BUTTON_WIDTH)/2.0f, GetScreenHeight()/3.0f + (BUTTON_HEIGHT + BUTTON_GAP)*2, BUTTON_WIDTH, BUTTON_HEIGHT});
-    this->title.setPosition((GetScreenWidth() - MeasureText("Ice Sliding", TITLE_SIZE))/2, GetScreenHeight()/6.0f);
+    if (nextScene() == SceneType::MainMenu)
+    {
+        this->manualBtn.setBounds((Rectangle){(GetScreenWidth() - BUTTON_WIDTH)/2.0f, GetScreenHeight()/3.0f, BUTTON_WIDTH, BUTTON_HEIGHT});
+        this->algoBtn.setBounds((Rectangle){(GetScreenWidth() - BUTTON_WIDTH)/2.0f, GetScreenHeight()/3.0f + BUTTON_HEIGHT + BUTTON_GAP, BUTTON_WIDTH, BUTTON_HEIGHT});
+        this->cmapBtn.setBounds((Rectangle){(GetScreenWidth() - BUTTON_WIDTH)/2.0f, GetScreenHeight()/3.0f + (BUTTON_HEIGHT + BUTTON_GAP)*2, BUTTON_WIDTH, BUTTON_HEIGHT});
+        this->title.setPosition((GetScreenWidth() - MeasureText("Ice Sliding", TITLE_SIZE))/2, GetScreenHeight()/6.0f);
+    }
 }
 void MainMenu::draw()
 {
     title.draw();
-    if(manualBtn.draw()) std::cout << "Manual pressed\n";
-    if(algoBtn.draw()) std::cout << "Algo pressed\n";
+    if(manualBtn.draw()) { this->gameState.setPlayMode(PlayMode::MANUAL); }
+    if(algoBtn.draw()) {this->gameState.setPlayMode(PlayMode::ALGORITHM);}
     if(cmapBtn.draw()) std::cout << "Create Map pressed\n";
 }
 SceneType MainMenu::nextScene()
@@ -34,5 +42,4 @@ SceneType MainMenu::nextScene()
         case PlayMode::SENTINEL:
             return SceneType::MainMenu;
     }
-
 }

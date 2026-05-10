@@ -2,7 +2,7 @@
 #include "library/raygui.h"
 #include "view/GameController.hpp"
 #include "view/SceneManager.hpp"
-#include "view/components/ArrowButton.hpp"
+#include "view/components/ImageTexture.hpp"
 #include "view/components/DescriptionPanel.hpp"
 #include "view/components/MenuButton.hpp"
 #include "view/components/Popup.hpp"
@@ -20,7 +20,7 @@ int main()
     GameController gc;
     SceneManager sceneManager(gs, gc);
 
-    while(!WindowShouldClose())
+    while (!WindowShouldClose())
     {
         float dt = GetFrameTime();
         sceneManager.update();

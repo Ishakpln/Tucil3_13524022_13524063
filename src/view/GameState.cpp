@@ -4,6 +4,8 @@ GameState::GameState():
     playMode(PlayMode::SENTINEL),
     boardSelected(false),
     selectedBoardPath("null"),
+    playerSelected(false),
+    playerImagePath("null"),
     board(),
     gameOver(false),
     winning(false),
@@ -16,6 +18,7 @@ PlayMode GameState::getPlayMode() const { return this->playMode; }
 Board GameState::getBoard() const {return this->board;}
 bool GameState::isBoardSelected() const {return this->boardSelected;}
 const char* GameState::getStringPath() const {return this->selectedBoardPath.c_str();}
+bool GameState::isPlayerSelected() const {return this->playerSelected;}
 bool GameState::isGameOver() const {return this->gameOver;}
 bool GameState::isWinning() const {return this->winning;}
 bool GameState::isResultGenerated() const{return this->resultGenerated;}

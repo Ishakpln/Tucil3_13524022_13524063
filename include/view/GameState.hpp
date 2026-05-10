@@ -16,6 +16,7 @@ public:
     GameState(GameState& other) = delete;
     GameState& operator=(const GameState& other) = delete;
 
+    bool isPlayerSelected() const;
     PlayMode getPlayMode() const;
     Board getBoard() const;
     bool isBoardSelected() const;
@@ -49,6 +50,8 @@ private:
     std::string selectedBoardPath;
     Board board;
 
+    bool playerSelected;
+    std::string playerImagePath;
     bool gameOver;
     bool winning;
     bool resultGenerated;

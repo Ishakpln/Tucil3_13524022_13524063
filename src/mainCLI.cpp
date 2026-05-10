@@ -22,6 +22,14 @@ namespace {
             return AlgorithmType::ASTAR;
         }
 
+        if (input == "BFS") {
+            return AlgorithmType::BFS;
+        }
+
+        if (input == "DFS") {
+            return AlgorithmType::DFS;
+        }
+
         throw invalid_argument("Choose only available valid given algorithms");
     }
 
@@ -40,6 +48,11 @@ namespace {
         }
         //more to come
         throw invalid_argument("Choose only available valid given heuristics");
+    }
+
+    bool usesHeuristic(AlgorithmType algorithm) {
+        return algorithm == AlgorithmType::ASTAR ||
+               algorithm == AlgorithmType::GBFS;
     }
 
     string AlgorithmTypeToString(AlgorithmType algorithm) {
@@ -122,7 +135,7 @@ int main() {
 
     Board board = Board();
     AlgorithmType algorithm;
-    HeuristicType heuristic;
+    HeuristicType heuristic = HeuristicType::SENTINEL;
 
     while (true) {
         cout << "Masukkan file input: ";
@@ -145,7 +158,7 @@ int main() {
     }
 
     while (true) {
-        cout << "Pilih algoritma (UCS/GBFS/A*): ";
+        cout << "Pilih algoritma (UCS/GBFS/A*/BFS/DFS): ";
         getline(cin, algorithmInput);
 
         try {
@@ -157,16 +170,18 @@ int main() {
         }
     }
 
-    while (true) {
-        cout << "Pilih heuristic (Euclidean_min/Euclidean_checkpoint/Manhattan_min/Manhattan_checkpoint): ";
-        getline(cin, heuristicInput);
+    if (usesHeuristic(algorithm)) {
+        while (true) {
+            cout << "Pilih heuristic (Euclidean_min/Euclidean_checkpoint/Manhattan_min/Manhattan_checkpoint): ";
+            getline(cin, heuristicInput);
 
-        try {
-            heuristic = parseHeuristicType(heuristicInput);
-            break;
-        }
-        catch (...) {
-            cout << "Input heuristic tidak valid. Coba lagi.\n";
+            try {
+                heuristic = parseHeuristicType(heuristicInput);
+                break;
+            }
+            catch (...) {
+                cout << "Input heuristic tidak valid. Coba lagi.\n";
+            }
         }
     }
 
@@ -175,7 +190,9 @@ int main() {
 
         if (!result.isFound) {
             cout << "\n=== Hasil " << AlgorithmTypeToString(result.algorithm) << " ===\n";
-            cout << "Heuristic: " << HeuristicTypeToString(result.heuristic) << '\n';
+            if (usesHeuristic(result.algorithm)) {
+                cout << "Heuristic: " << HeuristicTypeToString(result.heuristic) << '\n';
+            }
             cout << "Found: Not found\n";
             cout << "Waktu eksekusi: " << result.execTime << " ms\n";
             cout << "Banyak iterasi: " << result.iterations << '\n';
@@ -186,7 +203,9 @@ int main() {
         playSolution(board, result);
 
         cout << "\n>>> Hasil " << AlgorithmTypeToString(result.algorithm) << " <<<\n";
-        cout << "Heuristic: " << HeuristicTypeToString(result.heuristic) << '\n';
+        if (usesHeuristic(result.algorithm)) {
+            cout << "Heuristic: " << HeuristicTypeToString(result.heuristic) << '\n';
+        }
         cout << "Found: Yes\n";
         cout << "Cost solusi: " << result.cost << '\n';
         cout << "Moves solusi: " << result.moves << '\n';

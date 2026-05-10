@@ -1,14 +1,15 @@
 #include "view/assets/BoardRenderer.hpp"
 #include "view/assets/AssetUtils.hpp"
 #include "view/assets/Obstacles.hpp"
+#include "utils/GuiHelper.hpp"
 #include <algorithm>
 #include <stdexcept>
 
-BoardRenderer::BoardRenderer(const std::string& type)
-    : playerType(type.empty() ? "Baby" : type),
-      floorTexture("./assets/components/FloorTile.png"),
-      goalCheckpoint(playerType),
-      player(createPlayerByType(playerType)) {
+BoardRenderer::BoardRenderer(const std::string& type):
+    playerType(type.empty() ? "Baby" : type),
+    floorTexture("./assets/components/FloorTile.png"),
+    goalCheckpoint(playerType),
+    player(createPlayerByType(playerType)) {
     loadObstacleCatalog();
 }
 
@@ -206,7 +207,8 @@ void BoardRenderer::drawObstacleRegion(const ObstacleRegion& region, const Board
 
             float rotation = fallback->getRotationFacingCenter(region.row + localRow, region.col + localCol, board.getRows(), board.getCols());
             fallback->drawAt(layout.x, layout.y, layout.tileSize, region.row + localRow, region.col + localCol,
-                             fallback->getWidthInTiles(), fallback->getHeightInTiles(), rotation);
+
+                fallback->getWidthInTiles(), fallback->getHeightInTiles(), rotation);
 
             for (int r = localRow; r < localRow + fallback->getHeightInTiles(); ++r) {
                 for (int c = localCol; c < localCol + fallback->getWidthInTiles(); ++c) {
@@ -236,7 +238,7 @@ void BoardRenderer::drawBoard(const Board& board, Rectangle bounds, Point player
                 DrawTexturePro(floorTexture.get(), AssetUtils::fullTextureSource(floorTexture.get()), dst, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
             }
             else {
-                DrawRectangleRec(dst, RAYWHITE);
+                DrawRectangleRec(dst, Theme::Background);
             }
         }
     }
@@ -252,7 +254,7 @@ void BoardRenderer::drawBoard(const Board& board, Rectangle bounds, Point player
             const float y = layout.y + row * layout.tileSize;
 
             if (tile == 'L') {
-                DrawRectangle(static_cast<int>(x), static_cast<int>(y), static_cast<int>(layout.tileSize), static_cast<int>(layout.tileSize), Fade(RED, 0.6f));
+                DrawRectangle(static_cast<int>(x), static_cast<int>(y), static_cast<int>(layout.tileSize), static_cast<int>(layout.tileSize), Fade(Theme::AccentDark, 0.6f));
             }
             else if (tile >= '0' && tile <= '9') {
                 goalCheckpoint.drawCheckpoint(layout.x, layout.y, layout.tileSize, row, col, tile);
@@ -273,10 +275,10 @@ void BoardRenderer::drawBoard(const Board& board, Rectangle bounds, Point player
 
     for (int row = 0; row <= board.getRows(); ++row) {
         DrawLine(static_cast<int>(layout.x), static_cast<int>(layout.y + row * layout.tileSize),
-                 static_cast<int>(layout.x + board.getCols() * layout.tileSize), static_cast<int>(layout.y + row * layout.tileSize), Fade(BLACK, 0.15f));
+                 static_cast<int>(layout.x + board.getCols() * layout.tileSize), static_cast<int>(layout.y + row * layout.tileSize), Fade(Theme::Grid, 0.15f));
     }
     for (int col = 0; col <= board.getCols(); ++col) {
         DrawLine(static_cast<int>(layout.x + col * layout.tileSize), static_cast<int>(layout.y),
-                 static_cast<int>(layout.x + col * layout.tileSize), static_cast<int>(layout.y + board.getRows() * layout.tileSize), Fade(BLACK, 0.15f));
+                 static_cast<int>(layout.x + col * layout.tileSize), static_cast<int>(layout.y + board.getRows() * layout.tileSize), Fade(Theme::Grid, 0.15f));
     }
 }

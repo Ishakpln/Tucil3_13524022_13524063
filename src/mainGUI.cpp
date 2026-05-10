@@ -2,6 +2,7 @@
 #include "library/raygui.h"
 #include "view/GameController.hpp"
 #include "view/SceneManager.hpp"
+#include "utils/GuiHelper.hpp"
 
 int main()
 {
@@ -9,6 +10,7 @@ int main()
     const int SCREEN_HEIGHT = 768;
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Ice Sliding Puzzle Solver");
+    ApplyGuiTheme();
     SetTargetFPS(60);
 
     GameState gs;
@@ -19,7 +21,7 @@ int main()
     {
         sceneManager.update();
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(Theme::Background);
         sceneManager.draw();
         EndDrawing();
     }

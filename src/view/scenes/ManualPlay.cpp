@@ -8,19 +8,24 @@ ManualPlay::ManualPlay(GameState &gs):
     playerPosition(gs.isBoardSelected() ? gs.getBoardRef().getStartPosition() : Point{-1, -1}),
     targetIndex(0),
     requestedScene(SceneType::ManualPlay),
-    statusMessage("Use W, A, S, D to move") {}
+    statusMessage("Use W, A, S, D to move"),
+    playerMoveAnimTimer(0.0f) {}
 
-void ManualPlay::tryMove(Direction direction)
+bool ManualPlay::tryMove(Direction direction)
 {
-    if (!gameState.isBoardSelected() || gameState.isGameOver() || gameState.isWinning())
-    {
-        return;
+    if (!gameState.isBoardSelected() || gameState.isGameOver() || gameState.isWinning()) {
+        return false;
     }
+
+    Point oldPosition = playerPosition;
 
     Node node{playerPosition, targetIndex, 0, 0.0f, 0.0f, -1, direction};
     SlideResult slide = gameState.getBoardRef().slideTo(node, direction);
+
     playerPosition = slide.position;
     targetIndex = slide.targetIndex;
+
+    bool moved = oldPosition.x != playerPosition.x || oldPosition.y != playerPosition.y;
 
     if (slide.isFinished)
     {
@@ -36,20 +41,31 @@ void ManualPlay::tryMove(Direction direction)
     {
         statusMessage = TextFormat("Cost: %d | Target index: %d", slide.cost, targetIndex);
     }
+
+    return moved;
 }
 
-void ManualPlay::update()
-{
-    renderer.update(GetFrameTime(), true);
+void ManualPlay::update() {
+    bool movedThisFrame = false;
 
-    if (IsKeyPressed(KEY_W))
-        tryMove(Direction::U);
-    if (IsKeyPressed(KEY_A))
-        tryMove(Direction::L);
-    if (IsKeyPressed(KEY_S))
-        tryMove(Direction::D);
-    if (IsKeyPressed(KEY_D))
-        tryMove(Direction::R);
+    if (IsKeyPressed(KEY_W)) movedThisFrame = tryMove(Direction::U) || movedThisFrame;
+    if (IsKeyPressed(KEY_A)) movedThisFrame = tryMove(Direction::L) || movedThisFrame;
+    if (IsKeyPressed(KEY_S)) movedThisFrame = tryMove(Direction::D) || movedThisFrame;
+    if (IsKeyPressed(KEY_D)) movedThisFrame = tryMove(Direction::R) || movedThisFrame;
+
+    if (movedThisFrame) {
+        playerMoveAnimTimer = 0.45f;
+    }
+
+    float dt = GetFrameTime();
+
+    if (playerMoveAnimTimer > 0.0f) {
+        playerMoveAnimTimer -= dt;
+        renderer.update(dt, true);
+    }
+    else {
+        renderer.update(dt, false);
+    }
 }
 
 void ManualPlay::draw()

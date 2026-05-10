@@ -12,8 +12,9 @@ private:
     int targetIndex;
     SceneType requestedScene;
     std::string statusMessage;
+    float playerMoveAnimTimer;
 
-    void tryMove(Direction direction);
+    bool tryMove(Direction direction);
 
 public:
     ManualPlay(GameState& gs);

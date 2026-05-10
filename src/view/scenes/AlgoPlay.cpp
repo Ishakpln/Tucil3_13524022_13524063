@@ -54,27 +54,31 @@ void AlgoPlay::runSolver()
     }
 }
 
-void AlgoPlay::update()
-{
-    renderer.update(GetFrameTime(), playing);
+void AlgoPlay::update() {
+    float dt = GetFrameTime();
+    bool movedThisFrame = false;
 
-    if (playing && gameState.isHasResult())
-    {
+    if (playing && gameState.isHasResult()) {
         SolveResult result = gameState.getResult();
-        playbackTimer += GetFrameTime();
-        if (playbackTimer >= 0.35f)
-        {
+        playbackTimer += dt;
+
+        if (playbackTimer >= 0.35f) {
             playbackTimer = 0.0f;
-            if (currentStep + 1 < static_cast<int>(result.pathSolution.size()))
-            {
+
+            if (currentStep + 1 < static_cast<int>(result.pathSolution.size())) {
+                Point oldPosition = result.pathSolution[currentStep].position;
                 ++currentStep;
+                Point newPosition = result.pathSolution[currentStep].position;
+
+                movedThisFrame = oldPosition.x != newPosition.x || oldPosition.y != newPosition.y;
             }
-            else
-            {
+            else {
                 playing = false;
             }
         }
     }
+
+    renderer.update(dt, movedThisFrame);
 }
 
 void AlgoPlay::draw()

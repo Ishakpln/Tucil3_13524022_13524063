@@ -46,7 +46,7 @@ void SelectBoard::discoverBoards()
     }
     catch (...)
     {
-        // Fall back to known repository sample below.
+        // fallback
     }
 
     std::sort(boardPaths.begin(), boardPaths.end());
@@ -85,7 +85,7 @@ SceneType SelectBoard::playgroundScene() const
 
 void SelectBoard::update()
 {
-    renderer.update(GetFrameTime(), true);
+    renderer.update(GetFrameTime(), false);
 }
 
 void SelectBoard::draw()

@@ -1,6 +1,8 @@
 #include "utils/Bridge.hpp"
 
 #include "solver/Algorithm/AStar.hpp"
+#include "solver/Algorithm/BFS.hpp"
+#include "solver/Algorithm/DFS.hpp"
 #include "solver/Algorithm/UCS.hpp"
 #include "solver/Algorithm/GBFS.hpp"
 #include "utils/Loader.hpp"
@@ -18,9 +20,9 @@ namespace {
             case AlgorithmType::GBFS:
                 return std::make_unique<GBFS>(board, heuristic);
             case AlgorithmType::BFS:
-                throw std::runtime_error("belum implementasi bfs");
+                return std::make_unique<BFS>(board);
             case AlgorithmType::DFS:
-                throw std::runtime_error("belum implementasi dfs");
+                return std::make_unique<DFS>(board);
             case AlgorithmType::SENTINEL:
                 break;
         }

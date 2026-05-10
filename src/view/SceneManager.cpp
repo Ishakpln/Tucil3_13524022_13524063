@@ -23,6 +23,8 @@ std::unique_ptr<Scene> SceneManager::createScene(SceneType sType)
         case SceneType::BoardEditor:
             return std::make_unique<BoardEditor>(this->gameState);
     }
+
+    return std::make_unique<MainMenu>(this->gameState);
 }
 
 void SceneManager::update()

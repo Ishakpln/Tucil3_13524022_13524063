@@ -2,6 +2,7 @@
 
 #include "view/Scene.hpp"
 #include "view/GameState.hpp"
+#include "view/assets/BoardRenderer.hpp"
 #include "raylib.h"
 
 #include <string>
@@ -11,6 +12,7 @@ class BoardEditor : public Scene
 {
 private:
     GameState& gameState;
+    BoardRenderer renderer;
     SceneType requestedScene;
     Vector2 editorScroll;
 

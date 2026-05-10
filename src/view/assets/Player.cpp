@@ -19,6 +19,14 @@ Player::Player(std::string typeName)
 
 const std::string& Player::getType() const { return playerType; }
 
+bool Player::usesContinuousAnimation() const {
+    return false;
+}
+
+bool Player::usesMovementRotation() const {
+    return true;
+}
+
 void Player::update(float dt, bool moving) {
     if (!moving) {
         sequenceIndex = 0;
@@ -70,6 +78,14 @@ void Player::drawAtTilePosition(float boardX, float boardY, float tileSize, floa
 
 Baby::Baby() : Player("Baby") {}
 Fire::Fire() : Player("Fire") {}
+
+bool Fire::usesContinuousAnimation() const {
+    return true;
+}
+
+bool Fire::usesMovementRotation() const {
+    return false;
+}
 
 std::unique_ptr<Player> createPlayerByType(const std::string& playerType) {
     if (playerType == "Fire") {

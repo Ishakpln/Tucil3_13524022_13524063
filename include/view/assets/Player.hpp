@@ -26,6 +26,8 @@ public:
     Player& operator=(Player&&) noexcept = default;
 
     const std::string& getType() const;
+    virtual bool usesContinuousAnimation() const;
+    virtual bool usesMovementRotation() const;
     void update(float dt, bool moving = true);
     void resetAnimation();
     void drawAt(float boardX, float boardY, float tileSize, int row, int col, float rotationDegrees = 0.0f) const;
@@ -40,6 +42,8 @@ public:
 class Fire : public Player {
 public:
     Fire();
+    bool usesContinuousAnimation() const override;
+    bool usesMovementRotation() const override;
 };
 
 std::unique_ptr<Player> createPlayerByType(const std::string& playerType);

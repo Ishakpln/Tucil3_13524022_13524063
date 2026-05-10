@@ -1,6 +1,14 @@
 CXX := g++
 CXXFLAGS := -std=c++17 -Wall -Iinclude
-CXXGFLAGS := -lraylib -lm -ldl -lpthread -lGL -lX11
+ifeq ($(OS),Windows_NT)
+	CXXGFLAGS := -lraylib -lopengl32 -lgdi32 -lwinmm
+	MKDIR_P = if not exist "$(subst /,\,$1)" mkdir "$(subst /,\,$1)"
+	RM_OUTPUTS = if exist "$(BUILD_DIR)" rmdir /s /q "$(BUILD_DIR)" & if exist "$(BIN_DIR)" del /q "$(BIN_DIR)\*.exe"
+else
+	CXXGFLAGS := -lraylib -lm -ldl -lpthread -lGL -lX11
+	MKDIR_P = mkdir -p $1
+	RM_OUTPUTS = rm -rf $(BUILD_DIR) $(BIN_DIR)/*.exe
+endif
 
 SRC_DIR := src
 BIN_DIR := bin
@@ -43,18 +51,18 @@ cli: $(CLI)
 gui: $(GUI)
 
 $(CLI) : $(CLI_OBJ)
-	@mkdir -p $(dir $@)
+	@$(call MKDIR_P,$(dir $@))
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(GUI) : $(GUI_OBJ)
-	@mkdir -p $(dir $@)
+	@$(call MKDIR_P,$(dir $@))
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(CXXGFLAGS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@mkdir -p $(dir $@)
+	@$(call MKDIR_P,$(dir $@))
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -rf $(BUILD_DIR) $(BIN_DIR)/*.exe
+	@$(RM_OUTPUTS)
 
 .PHONY: all clean run rung cli gui

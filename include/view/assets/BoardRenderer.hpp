@@ -6,6 +6,7 @@
 #include "view/assets/Obstacle.hpp"
 #include "view/assets/Player.hpp"
 #include "view/assets/TextureResource.hpp"
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -32,9 +33,13 @@ private:
     std::vector<std::unique_ptr<Obstacle>> obstacleCatalog;
 
     void loadObstacleCatalog();
-    const Obstacle* findExactObstacle(int widthTiles, int heightTiles) const;
-    const Obstacle* findLargestFittingObstacle(int widthTiles, int heightTiles) const;
-    void drawObstacleRegion(const ObstacleRegion& region, const Board& board, const BoardLayout& layout) const;
+    const Obstacle* chooseExactObstacle(const ObstacleRegion& region) const;
+    const Obstacle* chooseFittingObstacle(int widthTiles, int heightTiles, int row, int col) const;
+    std::vector<ObstacleRegion> buildGreedyObstacleRegions(int rows, int cols, const std::function<char(int, int)>& tileAt) const;
+    void drawObstacleRegion(const ObstacleRegion& region, int boardRows, int boardCols, const BoardLayout& layout) const;
+    void drawTileMap(int rows, int cols, const std::function<char(int, int)>& tileAt, Rectangle bounds,
+                     float playerRow, float playerCol, bool drawPlayer, float playerRotationDegrees,
+                     bool drawGrid) const;
 
 public:
     explicit BoardRenderer(const std::string& playerType = "Baby");
@@ -46,4 +51,5 @@ public:
     std::vector<ObstacleRegion> buildGreedyObstacleRegions(const Board& board) const;
     void drawBoard(const Board& board, Rectangle bounds, Point playerPosition, bool drawPlayer = true, float playerRotationDegrees = 0.0f) const;
     void drawBoardAt(const Board& board, Rectangle bounds, float playerRow, float playerCol, bool drawPlayer = true, float playerRotationDegrees = 0.0f) const;
+    void drawEditorBoard(int rows, int cols, const std::vector<char>& tiles, Rectangle bounds, bool drawPlayer = true) const;
 };

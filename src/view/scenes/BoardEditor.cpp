@@ -36,20 +36,6 @@ namespace
         return c == 'X' || c == '*' || c == 'L' || c == 'Z' || c == 'O' || isCheckpoint(c);
     }
 
-    Color colorForTile(char tile)
-    {
-        switch (tile)
-        {
-            case 'X': return Theme::Border;
-            case 'L': return Theme::AccentDark;
-            case 'Z': return Theme::Accent;
-            case 'O': return Theme::Surface;
-            default:
-                if (isCheckpoint(tile)) return Theme::Accent;
-                return Theme::Background;
-        }
-    }
-
     std::string trimExtension(std::string name)
     {
         if (name.size() >= 4 && name.substr(name.size() - 4) == ".txt")
@@ -74,6 +60,7 @@ namespace
 
 BoardEditor::BoardEditor(GameState &gs) :
     gameState(gs),
+    renderer(gs.getPlayerType()),
     requestedScene(SceneType::BoardEditor),
     editorScroll{0.0f, 0.0f},
     rows(7),
@@ -441,21 +428,20 @@ void BoardEditor::drawBoardGrid(Rectangle bounds)
     const float cellW = bounds.width / static_cast<float>(cols);
     const float cellH = bounds.height / static_cast<float>(rows);
 
+    renderer.drawEditorBoard(rows, cols, tiles, bounds, true);
+
     for (int row = 0; row < rows; ++row)
     {
         for (int col = 0; col < cols; ++col)
         {
             Rectangle cell{bounds.x + col * cellW, bounds.y + row * cellH, cellW, cellH};
             const char tile = tileAt(row, col);
-            Color tileColor = colorForTile(tile);
-            if (tile == '*') tileColor = Theme::Background;
-
-            DrawRectangleRec(cell, tileColor);
             DrawRectangleLinesEx(cell, 1.0f, Fade(Theme::Text, 0.35f));
 
             char label[2] = {tile, '\0'};
             const int fontSize = static_cast<int>(std::clamp(cellH * 0.45f, 12.0f, 24.0f));
-            Color textColor = (tile == 'X' || tile == 'L') ? Theme::Background : Theme::Text;
+            Color textColor = tile == '*' ? Fade(Theme::Text, 0.35f) : Theme::Text;
+            if (tile == 'X') textColor = Fade(Theme::Background, 0.75f);
             drawCenteredText(label, cell, fontSize, textColor);
         }
     }
@@ -730,6 +716,8 @@ bool BoardEditor::saveCurrentBoard(std::string& message)
 
 void BoardEditor::update()
 {
+    renderer.update(GetFrameTime(), true);
+
     if (showSavePopup)
     {
         if (IsKeyPressed(KEY_ESCAPE))

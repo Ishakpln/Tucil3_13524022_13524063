@@ -4,6 +4,7 @@
 #include "utils/GuiHelper.hpp"
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <stdexcept>
 
 BoardRenderer::BoardRenderer(const std::string& type):
@@ -54,7 +55,7 @@ void BoardRenderer::loadObstacleCatalog() {
 
 void BoardRenderer::update(float dt, bool animatePlayer) {
     if (player) {
-        player->update(dt, animatePlayer);
+        player->update(dt, animatePlayer || player->usesContinuousAnimation());
     }
 }
 
@@ -81,9 +82,15 @@ BoardLayout BoardRenderer::calculateLayout(const Board& board, Rectangle bounds)
 }
 
 std::vector<ObstacleRegion> BoardRenderer::buildGreedyObstacleRegions(const Board& board) const {
+    return buildGreedyObstacleRegions(
+        board.getRows(),
+        board.getCols(),
+        [&board](int row, int col) { return board.getTile(Point{row, col}); }
+    );
+}
+
+std::vector<ObstacleRegion> BoardRenderer::buildGreedyObstacleRegions(int rows, int cols, const std::function<char(int, int)>& tileAt) const {
     std::vector<ObstacleRegion> regions;
-    const int rows = board.getRows();
-    const int cols = board.getCols();
 
     if (rows <= 0 || cols <= 0) {
         return regions;
@@ -93,7 +100,7 @@ std::vector<ObstacleRegion> BoardRenderer::buildGreedyObstacleRegions(const Boar
 
     auto isFreeObstacle = [&](int row, int col) {
         return row >= 0 && row < rows && col >= 0 && col < cols &&
-               !used[row][col] && board.getTile(Point{row, col}) == 'X';
+               !used[row][col] && tileAt(row, col) == 'X';
     };
 
     for (int row = 0; row < rows; ++row) {
@@ -142,29 +149,58 @@ std::vector<ObstacleRegion> BoardRenderer::buildGreedyObstacleRegions(const Boar
     return regions;
 }
 
-const Obstacle* BoardRenderer::findExactObstacle(int widthTiles, int heightTiles) const {
+const Obstacle* BoardRenderer::chooseExactObstacle(const ObstacleRegion& region) const {
+    std::vector<const Obstacle*> matches;
+
     for (const auto& obstacle : obstacleCatalog) {
-        if (obstacle->getWidthInTiles() == widthTiles && obstacle->getHeightInTiles() == heightTiles) {
-            return obstacle.get();
+        if (obstacle->getWidthInTiles() == region.width && obstacle->getHeightInTiles() == region.height) {
+            matches.push_back(obstacle.get());
         }
     }
-    return nullptr;
+
+    if (matches.empty()) {
+        return nullptr;
+    }
+
+    // A stable hash gives variety among same-sized assets without making replays nondeterministic.
+    const std::size_t key = static_cast<std::size_t>(
+        region.row * 73856093 ^ region.col * 19349663 ^ region.width * 83492791 ^ region.height * 2654435761u
+    );
+    return matches[key % matches.size()];
 }
 
-const Obstacle* BoardRenderer::findLargestFittingObstacle(int widthTiles, int heightTiles) const {
+const Obstacle* BoardRenderer::chooseFittingObstacle(int widthTiles, int heightTiles, int row, int col) const {
+    std::vector<const Obstacle*> matches;
+    int bestArea = 0;
+
     for (const auto& obstacle : obstacleCatalog) {
         if (obstacle->getWidthInTiles() <= widthTiles && obstacle->getHeightInTiles() <= heightTiles) {
-            return obstacle.get();
+            int area = obstacle->getWidthInTiles() * obstacle->getHeightInTiles();
+            if (area > bestArea) {
+                matches.clear();
+                bestArea = area;
+            }
+            if (area == bestArea) {
+                matches.push_back(obstacle.get());
+            }
         }
     }
-    return nullptr;
+
+    if (matches.empty()) {
+        return nullptr;
+    }
+
+    const std::size_t key = static_cast<std::size_t>(
+        row * 73856093 ^ col * 19349663 ^ widthTiles * 83492791 ^ heightTiles * 2654435761u
+    );
+    return matches[key % matches.size()];
 }
 
-void BoardRenderer::drawObstacleRegion(const ObstacleRegion& region, const Board& board, const BoardLayout& layout) const {
-    const Obstacle* exact = findExactObstacle(region.width, region.height);
+void BoardRenderer::drawObstacleRegion(const ObstacleRegion& region, int boardRows, int boardCols, const BoardLayout& layout) const {
+    const Obstacle* exact = chooseExactObstacle(region);
 
     if (exact != nullptr) {
-        float rotation = exact->getRotationFacingCenter(region.row, region.col, board.getRows(), board.getCols());
+        float rotation = exact->getRotationFacingCenter(region.row, region.col, boardRows, boardCols);
         exact->drawAt(layout.x, layout.y, layout.tileSize, region.row, region.col, region.width, region.height, rotation);
         return;
     }
@@ -190,12 +226,9 @@ void BoardRenderer::drawObstacleRegion(const ObstacleRegion& region, const Board
                 continue;
             }
 
-            const Obstacle* fallback = nullptr;
-            for (const auto& candidate : obstacleCatalog) {
-                if (canPlace(candidate.get(), localRow, localCol)) {
-                    fallback = candidate.get();
-                    break;
-                }
+            const Obstacle* fallback = chooseFittingObstacle(region.width - localCol, region.height - localRow, region.row + localRow, region.col + localCol);
+            if (!canPlace(fallback, localRow, localCol)) {
+                fallback = nullptr;
             }
 
             if (fallback == nullptr) {
@@ -206,7 +239,7 @@ void BoardRenderer::drawObstacleRegion(const ObstacleRegion& region, const Board
                 continue;
             }
 
-            float rotation = fallback->getRotationFacingCenter(region.row + localRow, region.col + localCol, board.getRows(), board.getCols());
+            float rotation = fallback->getRotationFacingCenter(region.row + localRow, region.col + localCol, boardRows, boardCols);
             fallback->drawAt(layout.x, layout.y, layout.tileSize, region.row + localRow, region.col + localCol,
 
                 fallback->getWidthInTiles(), fallback->getHeightInTiles(), rotation);
@@ -230,10 +263,81 @@ void BoardRenderer::drawBoardAt(const Board& board, Rectangle bounds, float play
         return;
     }
 
-    BoardLayout layout = calculateLayout(board, bounds);
+    float safePlayerRow = playerRow;
+    float safePlayerCol = playerCol;
+    if (!std::isfinite(safePlayerRow) || !std::isfinite(safePlayerCol) ||
+        safePlayerRow < 0.0f || safePlayerRow >= static_cast<float>(board.getRows()) ||
+        safePlayerCol < 0.0f || safePlayerCol >= static_cast<float>(board.getCols())) {
+        Point start = board.getStartPosition();
+        safePlayerRow = static_cast<float>(start.x);
+        safePlayerCol = static_cast<float>(start.y);
+    }
 
-    for (int row = 0; row < board.getRows(); ++row) {
-        for (int col = 0; col < board.getCols(); ++col) {
+    drawTileMap(
+        board.getRows(),
+        board.getCols(),
+        [&board](int row, int col) { return board.getTile(Point{row, col}); },
+        bounds,
+        safePlayerRow,
+        safePlayerCol,
+        drawPlayer,
+        playerRotationDegrees,
+        true
+    );
+}
+
+void BoardRenderer::drawEditorBoard(int rows, int cols, const std::vector<char>& tiles, Rectangle bounds, bool drawPlayer) const {
+    if (rows <= 0 || cols <= 0 || static_cast<int>(tiles.size()) < rows * cols) {
+        DrawText("Invalid board draft", static_cast<int>(bounds.x + 20), static_cast<int>(bounds.y + 20), 18, Theme::Error);
+        return;
+    }
+
+    float playerRow = -1.0f;
+    float playerCol = -1.0f;
+    for (int row = 0; row < rows; ++row) {
+        for (int col = 0; col < cols; ++col) {
+            if (tiles[row * cols + col] == 'Z') {
+                playerRow = static_cast<float>(row);
+                playerCol = static_cast<float>(col);
+            }
+        }
+    }
+
+    drawTileMap(
+        rows,
+        cols,
+        [&tiles, cols](int row, int col) { return tiles[row * cols + col]; },
+        bounds,
+        playerRow,
+        playerCol,
+        drawPlayer && playerRow >= 0.0f,
+        0.0f,
+        false
+    );
+}
+
+void BoardRenderer::drawTileMap(int rows, int cols, const std::function<char(int, int)>& tileAt, Rectangle bounds,
+                                float playerRow, float playerCol, bool drawPlayer, float playerRotationDegrees,
+                                bool drawGrid) const {
+    BoardLayout layout;
+    if (rows <= 0 || cols <= 0) {
+        layout.x = bounds.x;
+        layout.y = bounds.y;
+        layout.tileSize = 32.0f;
+    }
+    else {
+        const float tileByWidth = bounds.width / static_cast<float>(cols);
+        const float tileByHeight = bounds.height / static_cast<float>(rows);
+        layout.tileSize = std::max(8.0f, std::min(tileByWidth, tileByHeight));
+
+        const float boardWidth = layout.tileSize * cols;
+        const float boardHeight = layout.tileSize * rows;
+        layout.x = bounds.x + (bounds.width - boardWidth) / 2.0f;
+        layout.y = bounds.y + (bounds.height - boardHeight) / 2.0f;
+    }
+
+    for (int row = 0; row < rows; ++row) {
+        for (int col = 0; col < cols; ++col) {
             const float x = layout.x + col * layout.tileSize;
             const float y = layout.y + row * layout.tileSize;
             Rectangle dst{x, y, layout.tileSize, layout.tileSize};
@@ -247,13 +351,13 @@ void BoardRenderer::drawBoardAt(const Board& board, Rectangle bounds, float play
         }
     }
 
-    for (const ObstacleRegion& region : buildGreedyObstacleRegions(board)) {
-        drawObstacleRegion(region, board, layout);
+    for (const ObstacleRegion& region : buildGreedyObstacleRegions(rows, cols, tileAt)) {
+        drawObstacleRegion(region, rows, cols, layout);
     }
 
-    for (int row = 0; row < board.getRows(); ++row) {
-        for (int col = 0; col < board.getCols(); ++col) {
-            const char tile = board.getTile(Point{row, col});
+    for (int row = 0; row < rows; ++row) {
+        for (int col = 0; col < cols; ++col) {
+            const char tile = tileAt(row, col);
             const float x = layout.x + col * layout.tileSize;
             const float y = layout.y + row * layout.tileSize;
 
@@ -273,21 +377,24 @@ void BoardRenderer::drawBoardAt(const Board& board, Rectangle bounds, float play
         float safeRow = playerRow;
         float safeCol = playerCol;
         if (!std::isfinite(safeRow) || !std::isfinite(safeCol) ||
-            safeRow < 0.0f || safeRow >= static_cast<float>(board.getRows()) ||
-            safeCol < 0.0f || safeCol >= static_cast<float>(board.getCols())) {
-            Point start = board.getStartPosition();
-            safeRow = static_cast<float>(start.x);
-            safeCol = static_cast<float>(start.y);
+            safeRow < 0.0f || safeRow >= static_cast<float>(rows) ||
+            safeCol < 0.0f || safeCol >= static_cast<float>(cols)) {
+            drawPlayer = false;
         }
-        player->drawAtTilePosition(layout.x, layout.y, layout.tileSize, safeRow, safeCol, playerRotationDegrees);
+        if (drawPlayer) {
+            const float rotation = player->usesMovementRotation() ? playerRotationDegrees : 0.0f;
+            player->drawAtTilePosition(layout.x, layout.y, layout.tileSize, safeRow, safeCol, rotation);
+        }
     }
 
-    for (int row = 0; row <= board.getRows(); ++row) {
-        DrawLine(static_cast<int>(layout.x), static_cast<int>(layout.y + row * layout.tileSize),
-                 static_cast<int>(layout.x + board.getCols() * layout.tileSize), static_cast<int>(layout.y + row * layout.tileSize), Fade(Theme::Grid, 0.15f));
-    }
-    for (int col = 0; col <= board.getCols(); ++col) {
-        DrawLine(static_cast<int>(layout.x + col * layout.tileSize), static_cast<int>(layout.y),
-                 static_cast<int>(layout.x + col * layout.tileSize), static_cast<int>(layout.y + board.getRows() * layout.tileSize), Fade(Theme::Grid, 0.15f));
+    if (drawGrid) {
+        for (int row = 0; row <= rows; ++row) {
+            DrawLine(static_cast<int>(layout.x), static_cast<int>(layout.y + row * layout.tileSize),
+                     static_cast<int>(layout.x + cols * layout.tileSize), static_cast<int>(layout.y + row * layout.tileSize), Fade(Theme::Grid, 0.15f));
+        }
+        for (int col = 0; col <= cols; ++col) {
+            DrawLine(static_cast<int>(layout.x + col * layout.tileSize), static_cast<int>(layout.y),
+                     static_cast<int>(layout.x + col * layout.tileSize), static_cast<int>(layout.y + rows * layout.tileSize), Fade(Theme::Grid, 0.15f));
+        }
     }
 }

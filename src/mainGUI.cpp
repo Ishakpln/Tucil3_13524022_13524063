@@ -9,7 +9,9 @@ int main()
     const int SCREEN_WIDTH = 1024;
     const int SCREEN_HEIGHT = 768;
 
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Ice Sliding Puzzle Solver");
+    SetWindowMinSize(900, 650);
     ApplyGuiTheme();
     SetTargetFPS(60);
 

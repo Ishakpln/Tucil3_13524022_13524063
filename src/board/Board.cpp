@@ -5,7 +5,8 @@
 #include <limits>
 
 using namespace std;
-Board::Board(){};
+Board::Board()
+    : rows(0), cols(0), tiles(), costs(), avgCost(0.0f), minCost(0), startPosition{-1, -1}, finishPosition{-1, -1}, checkpointDistances() {};
 Board::Board(
     int rows,
     int cols,

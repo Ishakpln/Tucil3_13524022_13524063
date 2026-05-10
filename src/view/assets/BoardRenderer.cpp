@@ -11,6 +11,7 @@
 BoardRenderer::BoardRenderer(const std::string& type):
     playerType(type.empty() ? "Baby" : type),
     floorTexture("./assets/components/FloorTile.png"),
+    lavaTexture("./assets/components/LavaTile.jpeg"),
     goalCheckpoint(playerType),
     player(createPlayerByType(playerType)),
     randomEngine(std::random_device{}()) {
@@ -394,7 +395,13 @@ void BoardRenderer::drawTileMap(int rows, int cols, const std::function<char(int
             const float y = layout.y + row * layout.tileSize;
 
             if (tile == 'L') {
-                DrawRectangle(static_cast<int>(x), static_cast<int>(y), static_cast<int>(layout.tileSize), static_cast<int>(layout.tileSize), Fade(Theme::AccentDark, 0.6f));
+                Rectangle dst{x, y, layout.tileSize, layout.tileSize};
+                if (lavaTexture.isLoaded()) {
+                    DrawTexturePro(lavaTexture.get(), AssetUtils::fullTextureSource(lavaTexture.get()), dst, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+                }
+                else {
+                    DrawRectangle(static_cast<int>(x), static_cast<int>(y), static_cast<int>(layout.tileSize), static_cast<int>(layout.tileSize), Fade(Theme::AccentDark, 0.6f));
+                }
             }
             else if (tile >= '0' && tile <= '9') {
                 // Gameplay can hide checkpoint overlays that have already been reached;

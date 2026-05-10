@@ -23,6 +23,7 @@ private:
     Point currentPlayerPosition() const;
     int currentTargetIndex() const;
     void runSolver();
+    void saveCurrentSolution();
     void moveToStep(int nextStep);
 
 public:

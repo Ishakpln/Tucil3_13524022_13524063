@@ -30,6 +30,7 @@ class BoardRenderer {
 private:
     std::string playerType;
     TextureResource floorTexture;
+    TextureResource lavaTexture;
     GoalCheckpoint goalCheckpoint;
     std::unique_ptr<Player> player;
     std::vector<std::unique_ptr<Obstacle>> obstacleCatalog;

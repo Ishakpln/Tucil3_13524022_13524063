@@ -2,7 +2,11 @@
 #include "library/raygui.h"
 #include "utils/GuiHelper.hpp"
 #include <algorithm>
+#include <cctype>
 #include <exception>
+#include <filesystem>
+#include <fstream>
+#include <string>
 
 namespace
 {
@@ -19,6 +23,21 @@ namespace
         }
 
         return "?";
+    }
+
+    const char* algorithmFileLabel(AlgorithmType algorithm)
+    {
+        switch (algorithm)
+        {
+            case AlgorithmType::ASTAR: return "ASTAR";
+            case AlgorithmType::UCS: return "UCS";
+            case AlgorithmType::GBFS: return "GBFS";
+            case AlgorithmType::DFS: return "DFS";
+            case AlgorithmType::BFS: return "BFS";
+            case AlgorithmType::SENTINEL: break;
+        }
+
+        return "UNKNOWN";
     }
 
     const char* heuristicLabel(HeuristicType heuristic)
@@ -38,6 +57,25 @@ namespace
     bool usesHeuristic(AlgorithmType algorithm)
     {
         return algorithm == AlgorithmType::ASTAR || algorithm == AlgorithmType::GBFS;
+    }
+
+    const char* heuristicFileLabel(AlgorithmType algorithm, HeuristicType heuristic)
+    {
+        if (!usesHeuristic(algorithm))
+        {
+            return "NoHeuristic";
+        }
+
+        switch (heuristic)
+        {
+            case HeuristicType::EUCLIDEAN_MIN: return "EucMin";
+            case HeuristicType::EUCLIDEAN_CHECKPOINT: return "EucCP";
+            case HeuristicType::MANHATTAN_MIN: return "ManMin";
+            case HeuristicType::MANHATTAN_CHECKPOINT: return "ManCP";
+            case HeuristicType::SENTINEL: break;
+        }
+
+        return "UnknownHeuristic";
     }
 
     int algorithmToIndex(AlgorithmType algorithm)
@@ -92,6 +130,26 @@ namespace
             case 3: return HeuristicType::EUCLIDEAN_MIN;
             default: return HeuristicType::MANHATTAN_CHECKPOINT;
         }
+    }
+
+    std::string sanitizeFilePart(const std::string& raw)
+    {
+        std::string output;
+
+        for (char c : raw)
+        {
+            unsigned char uc = static_cast<unsigned char>(c);
+            if (std::isalnum(uc) || c == '_' || c == '-')
+            {
+                output.push_back(c);
+            }
+            else if (std::isspace(uc))
+            {
+                output.push_back('_');
+            }
+        }
+
+        return output.empty() ? "board" : output;
     }
 }
 
@@ -199,6 +257,86 @@ void AlgoPlay::runSolver()
     }
 }
 
+void AlgoPlay::saveCurrentSolution()
+{
+    if (!gameState.isBoardSelected())
+    {
+        statusMessage = "No board selected";
+        return;
+    }
+
+    if (!gameState.isHasResult())
+    {
+        statusMessage = "Run solver before saving";
+        return;
+    }
+
+    try
+    {
+        SolveResult result = gameState.getResult();
+        std::filesystem::path inputPath(gameState.getStringPath());
+        std::string boardName = inputPath.stem().string();
+        if (boardName.empty() || boardName == "null")
+        {
+            boardName = "board";
+        }
+
+        std::filesystem::path outputDir("./test/output");
+        std::filesystem::create_directories(outputDir);
+
+        std::string fileName = std::string(algorithmFileLabel(result.algorithm)) + "_" +
+                               heuristicFileLabel(result.algorithm, result.heuristic) + "_" +
+                               sanitizeFilePart(boardName) + ".txt";
+        std::filesystem::path outputPath = outputDir / fileName;
+
+        std::ofstream output(outputPath);
+        if (!output.is_open())
+        {
+            statusMessage = "Failed to save solution";
+            return;
+        }
+
+        const Board& board = gameState.getBoardRef();
+        output << "Problem:\n";
+        output << board.getRows() << ' ' << board.getCols() << '\n';
+
+        for (int row = 0; row < board.getRows(); ++row)
+        {
+            for (int col = 0; col < board.getCols(); ++col)
+            {
+                output << board.getTile(Point{row, col});
+            }
+            output << '\n';
+        }
+
+        for (int row = 0; row < board.getRows(); ++row)
+        {
+            for (int col = 0; col < board.getCols(); ++col)
+            {
+                if (col > 0) output << ' ';
+                output << board.getCost(Point{row, col});
+            }
+            output << '\n';
+        }
+
+        output << "\nSolution:\n";
+        output << "Algorithm     : " << algorithmLabel(result.algorithm) << '\n';
+        output << "Heuristic     : " << (usesHeuristic(result.algorithm) ? heuristicLabel(result.heuristic) : "-") << '\n';
+        output << "Found         : " << (result.isFound ? "Yes" : "No") << '\n';
+        output << "Move solution : " << result.moves << '\n';
+        output << "Total cost    : " << result.cost << '\n';
+        output << "Time          : " << result.execTime << " ms\n";
+        output << "Iterations    : " << result.iterations << '\n';
+
+        statusMessage = "Saved " + outputPath.generic_string();
+    }
+    catch (const std::exception& e)
+    {
+        statusMessage = e.what();
+        gameState.setErrorMessage(statusMessage);
+    }
+}
+
 void AlgoPlay::update() {
     float dt = GetFrameTime();
     playerMotion.update(dt);
@@ -270,6 +408,10 @@ void AlgoPlay::draw()
         if (GuiButton(Rectangle{20, 455, 70, 36}, "Prev"))
         {
             moveToStep(currentStep - 1);
+        }
+        if (GuiButton(Rectangle{20, 510, 150, 40}, "Save Solution"))
+        {
+            saveCurrentSolution();
         }
     }
 

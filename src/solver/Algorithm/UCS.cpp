@@ -109,23 +109,20 @@ Result UCS::solve()
             newNode.move = dir;
 
             if (sr.isFinished) {
-                temporaryFinalCost = newNode.gCost;
-                allNodes.push_back(newNode);
-
-                if (temporaryFinalCost > newNode.gCost) {temporaryFinalCost = newNode.gCost;}
-
-                if (processQueue.top().gCost < temporaryFinalCost)
-                {
+                if (newNode.gCost < temporaryFinalCost) {
+                    temporaryFinalCost = newNode.gCost;
                     temporaryFinalNode = newNode;
                     checkAnotherNode = true;
                 }
-                else
+
+                if (!processQueue.empty() && processQueue.top().gCost < temporaryFinalCost)
                 {
-                    auto eTime = std::chrono::high_resolution_clock::now();
-                    std::chrono::duration<float, std::milli> duration = eTime - sTime;
-                    if (checkAnotherNode) return constructPath(allNodes, temporaryFinalNode, expandedNodes, duration.count());
-                    return constructPath(allNodes, newNode, expandedNodes, duration.count());
+                    continue;
                 }
+
+                auto eTime = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<float, std::milli> duration = eTime - sTime;
+                return constructPath(allNodes, temporaryFinalNode, expandedNodes, duration.count());
             }
 
             std::string newKey = getStateKey(newNode);
@@ -139,6 +136,11 @@ Result UCS::solve()
 
     auto eTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> duration = eTime - sTime;
+
+    if (checkAnotherNode) {
+        return constructPath(allNodes, temporaryFinalNode, expandedNodes, duration.count());
+    }
+
     result.found = false;
     result.time = duration.count();
     result.totalCost = 0;

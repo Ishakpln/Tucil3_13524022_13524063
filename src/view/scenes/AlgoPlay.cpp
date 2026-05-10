@@ -4,6 +4,29 @@
 #include <algorithm>
 #include <exception>
 
+namespace
+{
+    const char* algorithmLabel(AlgorithmType algorithm)
+    {
+        switch (algorithm)
+        {
+            case AlgorithmType::ASTAR: return "A*";
+            case AlgorithmType::UCS: return "UCS";
+            case AlgorithmType::GBFS: return "GBFS";
+            case AlgorithmType::DFS: return "DFS";
+            case AlgorithmType::BFS: return "BFS";
+            case AlgorithmType::SENTINEL: break;
+        }
+
+        return "?";
+    }
+
+    bool algorithmButton(Rectangle bounds, AlgorithmType current, AlgorithmType algorithm)
+    {
+        return GuiButton(bounds, TextFormat("%s%s", current == algorithm ? ">" : "", algorithmLabel(algorithm)));
+    }
+}
+
 AlgoPlay::AlgoPlay(GameState &gs): 
     gameState(gs),
     renderer(gs.getPlayerType()),
@@ -138,22 +161,26 @@ void AlgoPlay::draw()
         requestedScene = SceneType::ChoosePlayer;
     }
 
-    if (GuiButton(Rectangle{20, 200, 70, 36}, selectedAlgorithm == AlgorithmType::ASTAR ? ">A*" : "A*"))
+    if (algorithmButton(Rectangle{20, 200, 70, 36}, selectedAlgorithm, AlgorithmType::ASTAR))
         selectedAlgorithm = AlgorithmType::ASTAR;
-    if (GuiButton(Rectangle{100, 200, 70, 36}, selectedAlgorithm == AlgorithmType::UCS ? ">UCS" : "UCS"))
+    if (algorithmButton(Rectangle{100, 200, 70, 36}, selectedAlgorithm, AlgorithmType::UCS))
         selectedAlgorithm = AlgorithmType::UCS;
-    if (GuiButton(Rectangle{20, 245, 70, 36}, selectedAlgorithm == AlgorithmType::GBFS ? ">GBFS" : "GBFS"))
+    if (algorithmButton(Rectangle{20, 245, 70, 36}, selectedAlgorithm, AlgorithmType::GBFS))
         selectedAlgorithm = AlgorithmType::GBFS;
-    if (GuiButton(Rectangle{100, 245, 70, 36}, "Run"))
+    if (algorithmButton(Rectangle{100, 245, 70, 36}, selectedAlgorithm, AlgorithmType::BFS))
+        selectedAlgorithm = AlgorithmType::BFS;
+    if (algorithmButton(Rectangle{20, 290, 70, 36}, selectedAlgorithm, AlgorithmType::DFS))
+        selectedAlgorithm = AlgorithmType::DFS;
+    if (GuiButton(Rectangle{100, 290, 70, 36}, "Run"))
         runSolver();
 
-    if (GuiButton(Rectangle{20, 300, 70, 36}, playing ? "Pause" : "Play"))
+    if (GuiButton(Rectangle{20, 345, 70, 36}, playing ? "Pause" : "Play"))
         playing = !playing;
-    if (GuiButton(Rectangle{100, 300, 70, 36}, "Next") && gameState.isHasResult())
+    if (GuiButton(Rectangle{100, 345, 70, 36}, "Next") && gameState.isHasResult())
     {
         moveToStep(currentStep + 1);
     }
-    if (GuiButton(Rectangle{20, 345, 70, 36}, "Prev"))
+    if (GuiButton(Rectangle{20, 390, 70, 36}, "Prev"))
     {
         moveToStep(currentStep - 1);
     }
@@ -173,7 +200,7 @@ void AlgoPlay::draw()
     if (gameState.isHasResult())
     {
         SolveResult result = gameState.getResult();
-        DrawText(TextFormat("Found: %s | Cost: %d | Moves: %s", result.isFound ? "Yes" : "No", result.cost, result.moves.c_str()),
+        DrawText(TextFormat("%s | Found: %s | Cost: %d | Moves: %s", algorithmLabel(result.algorithm), result.isFound ? "Yes" : "No", result.cost, result.moves.c_str()),
                  200, GetScreenHeight() - 32, 18, Theme::Text);
         DrawText(TextFormat("Step: %d/%d | Time: %.3f ms | Iterations: %d", currentStep,
                             static_cast<int>(result.pathSolution.size()) > 0 ? static_cast<int>(result.pathSolution.size()) - 1 : 0,

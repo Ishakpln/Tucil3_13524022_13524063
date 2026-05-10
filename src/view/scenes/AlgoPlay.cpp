@@ -125,6 +125,23 @@ Point AlgoPlay::currentPlayerPosition() const
     return gameState.isBoardSelected() ? gameState.getBoardRef().getStartPosition() : Point{-1, -1};
 }
 
+int AlgoPlay::currentTargetIndex() const
+{
+    if (!gameState.isHasResult())
+    {
+        return 0;
+    }
+
+    SolveResult result = gameState.getResult();
+    if (result.pathSolution.empty())
+    {
+        return 0;
+    }
+
+    int clamped = std::max(0, std::min(currentStep, static_cast<int>(result.pathSolution.size()) - 1));
+    return result.pathSolution[clamped].targetIndex;
+}
+
 void AlgoPlay::moveToStep(int nextStep)
 {
     if (!gameState.isHasResult() || playerMotion.isActive()) {
@@ -276,7 +293,7 @@ void AlgoPlay::draw()
     if (gameState.isBoardSelected())
     {
         Vector2 drawPosition = playerMotion.getCurrentTilePosition();
-        renderer.drawBoardAt(gameState.getBoardRef(), boardBounds, drawPosition.x, drawPosition.y, true, playerMotion.getRotationFromUpDegrees());
+        renderer.drawBoardAt(gameState.getBoardRef(), boardBounds, drawPosition.x, drawPosition.y, true, playerMotion.getRotationFromUpDegrees(), currentTargetIndex());
     }
     else
     {

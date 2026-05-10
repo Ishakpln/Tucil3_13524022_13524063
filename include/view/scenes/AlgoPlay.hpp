@@ -21,6 +21,7 @@ private:
     std::string statusMessage;
 
     Point currentPlayerPosition() const;
+    int currentTargetIndex() const;
     void runSolver();
     void moveToStep(int nextStep);
 

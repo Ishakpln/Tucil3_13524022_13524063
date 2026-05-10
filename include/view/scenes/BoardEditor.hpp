@@ -30,6 +30,7 @@ private:
     int selectedCol;
     char selectedBrush;
     bool costValueEditMode;
+    bool costInputFresh;
 
     std::vector<std::string> boardPaths;
     int selectedBoardIndex;

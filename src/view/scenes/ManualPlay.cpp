@@ -100,7 +100,7 @@ void ManualPlay::draw()
     if (gameState.isBoardSelected())
     {
         Vector2 drawPosition = playerMotion.getCurrentTilePosition();
-        renderer.drawBoardAt(gameState.getBoardRef(), boardBounds, drawPosition.x, drawPosition.y, true, playerMotion.getRotationFromUpDegrees());
+        renderer.drawBoardAt(gameState.getBoardRef(), boardBounds, drawPosition.x, drawPosition.y, true, playerMotion.getRotationFromUpDegrees(), targetIndex);
     }
     else
     {

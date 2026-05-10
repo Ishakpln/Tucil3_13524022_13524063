@@ -75,6 +75,7 @@ BoardEditor::BoardEditor(GameState &gs) :
     selectedCol(1),
     selectedBrush('*'),
     costValueEditMode(false),
+    costInputFresh(false),
     boardPaths(),
     selectedBoardIndex(0),
     showSavePopup(false),
@@ -133,6 +134,8 @@ void BoardEditor::createDefaultBoard(int newRows, int newCols)
 
     selectedRow = std::clamp(selectedRow, 0, rows - 1);
     selectedCol = std::clamp(selectedCol, 0, cols - 1);
+    costValueEditMode = false;
+    costInputFresh = false;
 }
 
 void BoardEditor::resizeBoard(int newRows, int newCols)
@@ -169,6 +172,8 @@ void BoardEditor::resizeBoard(int newRows, int newCols)
 
     selectedRow = std::clamp(selectedRow, 0, rows - 1);
     selectedCol = std::clamp(selectedCol, 0, cols - 1);
+    costValueEditMode = false;
+    costInputFresh = false;
     normalizeCosts();
     statusMessage = "Board size updated.";
 }
@@ -224,6 +229,8 @@ void BoardEditor::loadBoardIntoEditor(const std::string& path)
 
         selectedRow = std::clamp(selectedRow, 0, rows - 1);
         selectedCol = std::clamp(selectedCol, 0, cols - 1);
+        costValueEditMode = false;
+        costInputFresh = false;
         std::string name = trimExtension(displayName(path));
         std::snprintf(boardName, sizeof(boardName), "%s", name.c_str());
         normalizeCosts();
@@ -356,6 +363,8 @@ void BoardEditor::drawLeftPanel(Rectangle panel)
         if (GuiButton(b, label))
         {
             selectedBrush = brushes[i];
+            costValueEditMode = false;
+            costInputFresh = false;
         }
     }
 
@@ -460,10 +469,14 @@ void BoardEditor::drawBoardGrid(Rectangle bounds)
         int col = 0;
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && cellFromMouse(bounds, row, col))
         {
+            costValueEditMode = false;
+            costInputFresh = false;
             applyBrush(row, col);
         }
         else if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON) && cellFromMouse(bounds, row, col))
         {
+            costValueEditMode = false;
+            costInputFresh = false;
             selectCell(row, col);
         }
     }
@@ -483,7 +496,12 @@ void BoardEditor::drawCostGrid(Rectangle bounds)
         {
             Rectangle cell{bounds.x + col * cellW, bounds.y + row * cellH, cellW, cellH};
             const bool fixedObstacle = tileAt(row, col) == 'X';
+            const bool selected = row == selectedRow && col == selectedCol;
             DrawRectangleRec(cell, fixedObstacle ? Fade(Theme::Border, 0.88f) : Theme::Background);
+            if (selected && costValueEditMode && !fixedObstacle)
+            {
+                DrawRectangleRec(cell, Fade(Theme::Accent, 0.25f));
+            }
             DrawRectangleLinesEx(cell, 1.0f, Fade(Theme::Text, 0.35f));
 
             const int fontSize = static_cast<int>(std::clamp(cellH * 0.28f, 8.0f, 15.0f));
@@ -508,6 +526,8 @@ void BoardEditor::drawCostGrid(Rectangle bounds)
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && cellFromMouse(bounds, row, col))
         {
             selectCell(row, col);
+            costValueEditMode = tileAt(row, col) != 'X';
+            costInputFresh = costValueEditMode;
         }
     }
 }
@@ -729,21 +749,82 @@ void BoardEditor::update()
         return;
     }
 
+    if (costValueEditMode)
+    {
+        bool handledCostInput = false;
+
+        if (tileAt(selectedRow, selectedCol) == 'X')
+        {
+            costValueEditMode = false;
+            costInputFresh = false;
+        }
+        else
+        {
+            int& selectedCost = costs[indexOf(selectedRow, selectedCol)];
+            for (int key = KEY_ZERO; key <= KEY_NINE; ++key)
+            {
+                if (IsKeyPressed(key))
+                {
+                    const int digit = key - KEY_ZERO;
+                    selectedCost = costInputFresh ? digit : std::min(999999, selectedCost * 10 + digit);
+                    costInputFresh = false;
+                    handledCostInput = true;
+                }
+            }
+            for (int key = KEY_KP_0; key <= KEY_KP_9; ++key)
+            {
+                if (IsKeyPressed(key))
+                {
+                    const int digit = key - KEY_KP_0;
+                    selectedCost = costInputFresh ? digit : std::min(999999, selectedCost * 10 + digit);
+                    costInputFresh = false;
+                    handledCostInput = true;
+                }
+            }
+            if (IsKeyPressed(KEY_BACKSPACE))
+            {
+                selectedCost /= 10;
+                costInputFresh = false;
+                handledCostInput = true;
+            }
+            if (IsKeyPressed(KEY_DELETE))
+            {
+                selectedCost = 0;
+                costInputFresh = false;
+                handledCostInput = true;
+            }
+            if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_ESCAPE))
+            {
+                costValueEditMode = false;
+                costInputFresh = false;
+                handledCostInput = true;
+            }
+        }
+
+        if (handledCostInput)
+        {
+            return;
+        }
+    }
+
     if (IsKeyPressed(KEY_X)) selectedBrush = 'X';
     if (IsKeyPressed(KEY_L)) selectedBrush = 'L';
     if (IsKeyPressed(KEY_Z)) selectedBrush = 'Z';
     if (IsKeyPressed(KEY_O)) selectedBrush = 'O';
     if (IsKeyPressed(KEY_SPACE)) selectedBrush = '*';
-    for (int i = 0; i <= 9; ++i)
+    if (!costValueEditMode)
     {
-        if (IsKeyPressed(KEY_ZERO + i)) selectedBrush = static_cast<char>('0' + i);
+        for (int i = 0; i <= 9; ++i)
+        {
+            if (IsKeyPressed(KEY_ZERO + i)) selectedBrush = static_cast<char>('0' + i);
+        }
     }
 
-    if (IsKeyPressed(KEY_UP)) selectCell(selectedRow - 1, selectedCol);
-    if (IsKeyPressed(KEY_DOWN)) selectCell(selectedRow + 1, selectedCol);
-    if (IsKeyPressed(KEY_LEFT)) selectCell(selectedRow, selectedCol - 1);
-    if (IsKeyPressed(KEY_RIGHT)) selectCell(selectedRow, selectedCol + 1);
-    if (IsKeyPressed(KEY_ENTER)) applyBrush(selectedRow, selectedCol);
+    if (IsKeyPressed(KEY_UP)) { selectCell(selectedRow - 1, selectedCol); costValueEditMode = false; costInputFresh = false; }
+    if (IsKeyPressed(KEY_DOWN)) { selectCell(selectedRow + 1, selectedCol); costValueEditMode = false; costInputFresh = false; }
+    if (IsKeyPressed(KEY_LEFT)) { selectCell(selectedRow, selectedCol - 1); costValueEditMode = false; costInputFresh = false; }
+    if (IsKeyPressed(KEY_RIGHT)) { selectCell(selectedRow, selectedCol + 1); costValueEditMode = false; costInputFresh = false; }
+    if (!costValueEditMode && IsKeyPressed(KEY_ENTER)) applyBrush(selectedRow, selectedCol);
 }
 
 void BoardEditor::draw()
@@ -787,18 +868,16 @@ void BoardEditor::draw()
     const float workW = contentW - localWorkX - outerPad;
 
     const float gridSizeByWidth = (workW - gap) / 2.0f;
-    const float gridSizeByHeight = std::max(260.0f, static_cast<float>(screenH) - 390.0f);
+    const float gridSizeByHeight = std::max(260.0f, static_cast<float>(screenH) - 230.0f);
 
     float gridSize = std::min(gridSizeByWidth, gridSizeByHeight);
     gridSize = std::clamp(gridSize, 260.0f, 760.0f);
 
     const float localGridY = 70.0f;
-    const float editPanelYLocal = localGridY + gridSize + 55.0f;
-    const float editPanelH = 145.0f;
 
     const float contentH = std::max(
         static_cast<float>(screenH) - scrollTop + 20.0f,
-        editPanelYLocal + editPanelH + 100.0f
+        localGridY + gridSize + 170.0f
     );
 
     Rectangle content{
@@ -864,32 +943,15 @@ void BoardEditor::draw()
         Theme::Text
     );
 
-    Rectangle editPanel{
-        workX,
-        originY + editPanelYLocal,
-        gridSize * 2.0f + gap,
-        editPanelH
-    };
-
-    DrawRectangleRec(editPanel, Theme::Surface);
-    DrawRectangleLinesEx(editPanel, 2.0f, Theme::Border);
-
-    const float infoX = editPanel.x + 24.0f;
-    const float infoY = editPanel.y + 22.0f;
-    const float tipsX = editPanel.x + editPanel.width * 0.47f;
-
     DrawText(
-        TextFormat("Selected cell: row %d, col %d", selectedRow + 1, selectedCol + 1),
-        static_cast<int>(infoX),
-        static_cast<int>(infoY),
-        16,
-        Theme::Text
-    );
-
-    DrawText(
-        TextFormat("Tile: %c", tileAt(selectedRow, selectedCol)),
-        static_cast<int>(infoX),
-        static_cast<int>(infoY + 30.0f),
+        TextFormat("Selected: row %d, col %d | Tile: %c | Cost: %d%s",
+                   selectedRow + 1,
+                   selectedCol + 1,
+                   tileAt(selectedRow, selectedCol),
+                   costAt(selectedRow, selectedCol),
+                   costValueEditMode ? " | typing cost" : ""),
+        static_cast<int>(workX),
+        static_cast<int>(gridY + gridSize + 42.0f),
         16,
         Theme::Text
     );
@@ -897,40 +959,12 @@ void BoardEditor::draw()
     if (tileAt(selectedRow, selectedCol) == 'X')
     {
         costs[indexOf(selectedRow, selectedCol)] = 999;
-
-        DrawText(
-            "Obstacle cost is automatically 999.",
-            static_cast<int>(infoX),
-            static_cast<int>(infoY + 65.0f),
-            16,
-            Theme::Text
-        );
     }
-    else
-    {
-        if (GuiValueBox(
-            Rectangle{infoX, infoY + 60.0f, 130.0f, 34.0f},
-            "Cost",
-            &costs[indexOf(selectedRow, selectedCol)],
-            0,
-            999999,
-            costValueEditMode
-        ))
-        {
-            costValueEditMode = !costValueEditMode;
-        }
-    }
-
-    DrawText("Controls:", static_cast<int>(tipsX), static_cast<int>(infoY), 16, Theme::Text);
-    DrawText("- left click board: paint", static_cast<int>(tipsX), static_cast<int>(infoY + 24.0f), 15, Theme::Text);
-    DrawText("- right click board: select", static_cast<int>(tipsX), static_cast<int>(infoY + 46.0f), 15, Theme::Text);
-    DrawText("- click cost grid: select cost", static_cast<int>(tipsX), static_cast<int>(infoY + 68.0f), 15, Theme::Text);
-    DrawText("- hotkeys: X, L, Z, O, Space, 0-9, Enter", static_cast<int>(tipsX), static_cast<int>(infoY + 90.0f), 15, Theme::Text);
 
     DrawText(
         statusMessage.c_str(),
-        static_cast<int>(editPanel.x + 24.0f),
-        static_cast<int>(editPanel.y + editPanel.height + 16.0f),
+        static_cast<int>(workX),
+        static_cast<int>(gridY + gridSize + 68.0f),
         17,
         Theme::Text
     );
@@ -939,8 +973,8 @@ void BoardEditor::draw()
     {
         DrawText(
             errorMessage.c_str(),
-            static_cast<int>(editPanel.x + 24.0f),
-            static_cast<int>(editPanel.y + editPanel.height + 42.0f),
+            static_cast<int>(workX),
+            static_cast<int>(gridY + gridSize + 92.0f),
             16,
             Theme::Error
         );
@@ -948,8 +982,8 @@ void BoardEditor::draw()
 
     if (GuiButton(
         Rectangle{
-            editPanel.x + editPanel.width / 2.0f - 105.0f,
-            editPanel.y + editPanel.height + 50.0f,
+            workX + (gridSize * 2.0f + gap) / 2.0f - 105.0f,
+            gridY + gridSize + 112.0f,
             210.0f,
             42.0f
         },

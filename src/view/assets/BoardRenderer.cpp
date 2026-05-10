@@ -5,13 +5,15 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <random>
 #include <stdexcept>
 
 BoardRenderer::BoardRenderer(const std::string& type):
     playerType(type.empty() ? "Baby" : type),
     floorTexture("./assets/components/FloorTile.png"),
     goalCheckpoint(playerType),
-    player(createPlayerByType(playerType)) {
+    player(createPlayerByType(playerType)),
+    randomEngine(std::random_device{}()) {
     loadObstacleCatalog();
 }
 
@@ -23,6 +25,7 @@ void BoardRenderer::setPlayerType(const std::string& newPlayerType) {
 
 void BoardRenderer::loadObstacleCatalog() {
     obstacleCatalog.clear();
+    obstacleChoiceCache.clear();
 
     // Order matters for deterministic fallback when several assets have the same tile size.
     obstacleCatalog.push_back(std::make_unique<Bed>());
@@ -51,6 +54,22 @@ void BoardRenderer::loadObstacleCatalog() {
                          if (a->getHeightInTiles() != b->getHeightInTiles()) return a->getHeightInTiles() > b->getHeightInTiles();
                          return a->getWidthInTiles() > b->getWidthInTiles();
                      });
+}
+
+std::size_t BoardRenderer::cachedRandomChoice(std::size_t key, std::size_t optionCount) const {
+    if (optionCount == 0) {
+        return 0;
+    }
+
+    auto found = obstacleChoiceCache.find(key);
+    if (found != obstacleChoiceCache.end()) {
+        return found->second % optionCount;
+    }
+
+    std::uniform_int_distribution<std::size_t> distribution(0, optionCount - 1);
+    std::size_t choice = distribution(randomEngine);
+    obstacleChoiceCache[key] = choice;
+    return choice;
 }
 
 void BoardRenderer::update(float dt, bool animatePlayer) {
@@ -162,11 +181,14 @@ const Obstacle* BoardRenderer::chooseExactObstacle(const ObstacleRegion& region)
         return nullptr;
     }
 
-    // A stable hash gives variety among same-sized assets without making replays nondeterministic.
     const std::size_t key = static_cast<std::size_t>(
-        region.row * 73856093 ^ region.col * 19349663 ^ region.width * 83492791 ^ region.height * 2654435761u
+        0x9e3779b97f4a7c15ull ^
+        region.row * 73856093 ^
+        region.col * 19349663 ^
+        region.width * 83492791 ^
+        region.height * 2654435761u
     );
-    return matches[key % matches.size()];
+    return matches[cachedRandomChoice(key, matches.size())];
 }
 
 const Obstacle* BoardRenderer::chooseFittingObstacle(int widthTiles, int heightTiles, int row, int col) const {
@@ -191,9 +213,13 @@ const Obstacle* BoardRenderer::chooseFittingObstacle(int widthTiles, int heightT
     }
 
     const std::size_t key = static_cast<std::size_t>(
-        row * 73856093 ^ col * 19349663 ^ widthTiles * 83492791 ^ heightTiles * 2654435761u
+        0xbf58476d1ce4e5b9ull ^
+        row * 73856093 ^
+        col * 19349663 ^
+        widthTiles * 83492791 ^
+        heightTiles * 2654435761u
     );
-    return matches[key % matches.size()];
+    return matches[cachedRandomChoice(key, matches.size())];
 }
 
 void BoardRenderer::drawObstacleRegion(const ObstacleRegion& region, int boardRows, int boardCols, const BoardLayout& layout) const {
@@ -258,6 +284,10 @@ void BoardRenderer::drawBoard(const Board& board, Rectangle bounds, Point player
 }
 
 void BoardRenderer::drawBoardAt(const Board& board, Rectangle bounds, float playerRow, float playerCol, bool drawPlayer, float playerRotationDegrees) const {
+    drawBoardAt(board, bounds, playerRow, playerCol, drawPlayer, playerRotationDegrees, 0);
+}
+
+void BoardRenderer::drawBoardAt(const Board& board, Rectangle bounds, float playerRow, float playerCol, bool drawPlayer, float playerRotationDegrees, int completedCheckpointCount) const {
     if (board.getRows() <= 0 || board.getCols() <= 0) {
         DrawText("No board loaded", static_cast<int>(bounds.x + 20), static_cast<int>(bounds.y + 20), 24, GRAY);
         return;
@@ -282,7 +312,8 @@ void BoardRenderer::drawBoardAt(const Board& board, Rectangle bounds, float play
         safePlayerCol,
         drawPlayer,
         playerRotationDegrees,
-        true
+        true,
+        completedCheckpointCount
     );
 }
 
@@ -312,13 +343,14 @@ void BoardRenderer::drawEditorBoard(int rows, int cols, const std::vector<char>&
         playerCol,
         drawPlayer && playerRow >= 0.0f,
         0.0f,
-        false
+        false,
+        0
     );
 }
 
 void BoardRenderer::drawTileMap(int rows, int cols, const std::function<char(int, int)>& tileAt, Rectangle bounds,
                                 float playerRow, float playerCol, bool drawPlayer, float playerRotationDegrees,
-                                bool drawGrid) const {
+                                bool drawGrid, int completedCheckpointCount) const {
     BoardLayout layout;
     if (rows <= 0 || cols <= 0) {
         layout.x = bounds.x;
@@ -365,7 +397,11 @@ void BoardRenderer::drawTileMap(int rows, int cols, const std::function<char(int
                 DrawRectangle(static_cast<int>(x), static_cast<int>(y), static_cast<int>(layout.tileSize), static_cast<int>(layout.tileSize), Fade(Theme::AccentDark, 0.6f));
             }
             else if (tile >= '0' && tile <= '9') {
-                goalCheckpoint.drawCheckpoint(layout.x, layout.y, layout.tileSize, row, col, tile);
+                // Gameplay can hide checkpoint overlays that have already been reached;
+                // the underlying board tile is unchanged and still used by the backend.
+                if (tile - '0' >= completedCheckpointCount) {
+                    goalCheckpoint.drawCheckpoint(layout.x, layout.y, layout.tileSize, row, col, tile);
+                }
             }
             else if (tile == 'O') {
                 goalCheckpoint.drawGoal(layout.x, layout.y, layout.tileSize, row, col);

@@ -39,6 +39,10 @@ void Player::resetAnimation() {
 }
 
 void Player::drawAt(float boardX, float boardY, float tileSize, int row, int col) const {
+    drawAtTilePosition(boardX, boardY, tileSize, static_cast<float>(row), static_cast<float>(col));
+}
+
+void Player::drawAtTilePosition(float boardX, float boardY, float tileSize, float row, float col) const {
     if (frames.empty()) {
         return;
     }

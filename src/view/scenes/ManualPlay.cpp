@@ -5,15 +5,17 @@
 ManualPlay::ManualPlay(GameState &gs): 
     gameState(gs),
     renderer(gs.getPlayerType()),
+    playerMotion(8.0f),
     playerPosition(gs.isBoardSelected() ? gs.getBoardRef().getStartPosition() : Point{-1, -1}),
     targetIndex(0),
     requestedScene(SceneType::ManualPlay),
-    statusMessage("Use W, A, S, D to move"),
-    playerMoveAnimTimer(0.0f) {}
+    statusMessage("Use W, A, S, D to move") {
+    playerMotion.reset(playerPosition);
+}
 
 bool ManualPlay::tryMove(Direction direction)
 {
-    if (!gameState.isBoardSelected() || gameState.isGameOver() || gameState.isWinning()) {
+    if (!gameState.isBoardSelected() || gameState.isGameOver() || gameState.isWinning() || playerMotion.isActive()) {
         return false;
     }
 
@@ -25,7 +27,13 @@ bool ManualPlay::tryMove(Direction direction)
     playerPosition = slide.position;
     targetIndex = slide.targetIndex;
 
-    bool moved = oldPosition.x != playerPosition.x || oldPosition.y != playerPosition.y;
+    bool moved = oldPosition != playerPosition;
+    if (moved) {
+        playerMotion.start(oldPosition, playerPosition);
+    }
+    else {
+        playerMotion.reset(playerPosition);
+    }
 
     if (slide.isFinished)
     {
@@ -46,31 +54,24 @@ bool ManualPlay::tryMove(Direction direction)
 }
 
 void ManualPlay::update() {
-    bool movedThisFrame = false;
-
-    if (IsKeyPressed(KEY_W)) movedThisFrame = tryMove(Direction::U) || movedThisFrame;
-    if (IsKeyPressed(KEY_A)) movedThisFrame = tryMove(Direction::L) || movedThisFrame;
-    if (IsKeyPressed(KEY_S)) movedThisFrame = tryMove(Direction::D) || movedThisFrame;
-    if (IsKeyPressed(KEY_D)) movedThisFrame = tryMove(Direction::R) || movedThisFrame;
-
-    if (movedThisFrame) {
-        playerMoveAnimTimer = 0.45f;
-    }
-
     float dt = GetFrameTime();
+    playerMotion.update(dt);
+    renderer.update(dt, playerMotion.isActive());
 
-    if (playerMoveAnimTimer > 0.0f) {
-        playerMoveAnimTimer -= dt;
-        renderer.update(dt, true);
+    // jangan pedulikan input kalau masih dalam fase bergerak
+        if (playerMotion.isActive()) {
+        return;
     }
-    else {
-        renderer.update(dt, false);
-    }
+
+    if (IsKeyPressed(KEY_W)) tryMove(Direction::U);
+    if (IsKeyPressed(KEY_A)) tryMove(Direction::L);
+    if (IsKeyPressed(KEY_S)) tryMove(Direction::D);
+    if (IsKeyPressed(KEY_D)) tryMove(Direction::R);
 }
 
 void ManualPlay::draw()
 {
-    DrawText("PLAY MANUAL", 210, 25, 32, Theme::Text);
+    DrawText("PLAY MANUAL", 210, 25, 30, Theme::Text);
 
     if (GuiButton(Rectangle{20, 20, 150, 42}, "Main Menu"))
     {
@@ -88,6 +89,7 @@ void ManualPlay::draw()
     if (GuiButton(Rectangle{20, 185, 150, 42}, "Retry"))
     {
         playerPosition = gameState.getBoardRef().getStartPosition();
+        playerMotion.reset(playerPosition);
         targetIndex = 0;
         gameState.setGameOver(false);
         gameState.setWinning(false);
@@ -97,7 +99,8 @@ void ManualPlay::draw()
     Rectangle boardBounds{200.0f, 80.0f, GetScreenWidth() - 230.0f, GetScreenHeight() - 140.0f};
     if (gameState.isBoardSelected())
     {
-        renderer.drawBoard(gameState.getBoardRef(), boardBounds, playerPosition, true);
+        Vector2 drawPosition = playerMotion.getCurrentTilePosition();
+        renderer.drawBoardAt(gameState.getBoardRef(), boardBounds, drawPosition.x, drawPosition.y, true);
     }
     else
     {

@@ -7,13 +7,16 @@
 AlgoPlay::AlgoPlay(GameState &gs): 
     gameState(gs),
     renderer(gs.getPlayerType()),
+    playerMotion(8.0f),
     requestedScene(SceneType::AlgoPlay),
     selectedAlgorithm(AlgorithmType::ASTAR),
     selectedHeuristic(HeuristicType::MANHATTAN_CHECKPOINT),
     currentStep(0),
     playbackTimer(0.0f),
     playing(false),
-    statusMessage("Choose algorithm, then Run") {}
+    statusMessage("Choose algorithm, then Run") {
+    playerMotion.reset(currentPlayerPosition());
+}
 
 Point AlgoPlay::currentPlayerPosition() const
 {
@@ -27,6 +30,36 @@ Point AlgoPlay::currentPlayerPosition() const
         }
     }
     return gameState.isBoardSelected() ? gameState.getBoardRef().getStartPosition() : Point{-1, -1};
+}
+
+void AlgoPlay::moveToStep(int nextStep)
+{
+    if (!gameState.isHasResult() || playerMotion.isActive()) {
+        return;
+    }
+
+    SolveResult result = gameState.getResult();
+    if (result.pathSolution.empty()) {
+        return;
+    }
+
+    int maxStep = static_cast<int>(result.pathSolution.size()) - 1;
+    int clampedNextStep = std::max(0, std::min(nextStep, maxStep));
+    if (clampedNextStep == currentStep) {
+        return;
+    }
+
+    Point from = result.pathSolution[currentStep].position;
+    Point to = result.pathSolution[clampedNextStep].position;
+    currentStep = clampedNextStep;
+    playbackTimer = 0.0f;
+
+    if (from != to) {
+        playerMotion.start(from, to);
+    }
+    else {
+        playerMotion.reset(to);
+    }
 }
 
 void AlgoPlay::runSolver()
@@ -44,6 +77,8 @@ void AlgoPlay::runSolver()
         gameState.setIsHasResult(true);
         gameState.setIsResultGenerated(true);
         currentStep = 0;
+        playbackTimer = 0.0f;
+        playerMotion.reset(currentPlayerPosition());
         playing = result.isFound;
         statusMessage = result.isFound ? "Solution found" : "Solution not found";
     }
@@ -56,29 +91,33 @@ void AlgoPlay::runSolver()
 
 void AlgoPlay::update() {
     float dt = GetFrameTime();
-    bool movedThisFrame = false;
+    playerMotion.update(dt);
+    renderer.update(dt, playerMotion.isActive());
 
-    if (playing && gameState.isHasResult()) {
-        SolveResult result = gameState.getResult();
-        playbackTimer += dt;
-
-        if (playbackTimer >= 0.35f) {
-            playbackTimer = 0.0f;
-
-            if (currentStep + 1 < static_cast<int>(result.pathSolution.size())) {
-                Point oldPosition = result.pathSolution[currentStep].position;
-                ++currentStep;
-                Point newPosition = result.pathSolution[currentStep].position;
-
-                movedThisFrame = oldPosition.x != newPosition.x || oldPosition.y != newPosition.y;
-            }
-            else {
-                playing = false;
-            }
-        }
+    if (!playing || !gameState.isHasResult()) {
+        return;
     }
 
-    renderer.update(dt, movedThisFrame);
+    // Wait until the current slide animation finishes before starting the next solver step.
+    if (playerMotion.isActive()) {
+        return;
+    }
+
+    SolveResult result = gameState.getResult();
+    if (result.pathSolution.empty()) {
+        playing = false;
+        return;
+    }
+
+    if (currentStep + 1 >= static_cast<int>(result.pathSolution.size())) {
+        playing = false;
+        return;
+    }
+
+    playbackTimer += dt;
+    if (playbackTimer >= 0.12f) {
+        moveToStep(currentStep + 1);
+    }
 }
 
 void AlgoPlay::draw()
@@ -112,21 +151,18 @@ void AlgoPlay::draw()
         playing = !playing;
     if (GuiButton(Rectangle{100, 300, 70, 36}, "Next") && gameState.isHasResult())
     {
-        SolveResult result = gameState.getResult();
-        if (!result.pathSolution.empty())
-        {
-            currentStep = std::min(currentStep + 1, static_cast<int>(result.pathSolution.size()) - 1);
-        }
+        moveToStep(currentStep + 1);
     }
     if (GuiButton(Rectangle{20, 345, 70, 36}, "Prev"))
     {
-        currentStep = std::max(0, currentStep - 1);
+        moveToStep(currentStep - 1);
     }
 
     Rectangle boardBounds{200.0f, 80.0f, GetScreenWidth() - 230.0f, GetScreenHeight() - 150.0f};
     if (gameState.isBoardSelected())
     {
-        renderer.drawBoard(gameState.getBoardRef(), boardBounds, currentPlayerPosition(), true);
+        Vector2 drawPosition = playerMotion.getCurrentTilePosition();
+        renderer.drawBoardAt(gameState.getBoardRef(), boardBounds, drawPosition.x, drawPosition.y, true);
     }
     else
     {

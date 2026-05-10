@@ -1,6 +1,7 @@
 #pragma once
 #include "view/Scene.hpp"
 #include "view/GameState.hpp"
+#include "view/TileMotion.hpp"
 #include "view/assets/BoardRenderer.hpp"
 
 class AlgoPlay : public Scene
@@ -8,6 +9,7 @@ class AlgoPlay : public Scene
 private:
     GameState& gameState;
     BoardRenderer renderer;
+    TileMotion playerMotion;
     SceneType requestedScene;
     AlgorithmType selectedAlgorithm;
     HeuristicType selectedHeuristic;
@@ -18,6 +20,7 @@ private:
 
     Point currentPlayerPosition() const;
     void runSolver();
+    void moveToStep(int nextStep);
 
 public:
     AlgoPlay(GameState& gs);

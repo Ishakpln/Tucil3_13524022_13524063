@@ -3,6 +3,7 @@
 #include "view/assets/Obstacles.hpp"
 #include "utils/GuiHelper.hpp"
 #include <algorithm>
+#include <cmath>
 #include <stdexcept>
 
 BoardRenderer::BoardRenderer(const std::string& type):
@@ -220,6 +221,10 @@ void BoardRenderer::drawObstacleRegion(const ObstacleRegion& region, const Board
 }
 
 void BoardRenderer::drawBoard(const Board& board, Rectangle bounds, Point playerPosition, bool drawPlayer) const {
+    drawBoardAt(board, bounds, static_cast<float>(playerPosition.x), static_cast<float>(playerPosition.y), drawPlayer);
+}
+
+void BoardRenderer::drawBoardAt(const Board& board, Rectangle bounds, float playerRow, float playerCol, bool drawPlayer) const {
     if (board.getRows() <= 0 || board.getCols() <= 0) {
         DrawText("No board loaded", static_cast<int>(bounds.x + 20), static_cast<int>(bounds.y + 20), 24, GRAY);
         return;
@@ -265,11 +270,16 @@ void BoardRenderer::drawBoard(const Board& board, Rectangle bounds, Point player
     }
 
     if (drawPlayer && player) {
-        Point safePosition = playerPosition;
-        if (safePosition.x < 0 || safePosition.x >= board.getRows() || safePosition.y < 0 || safePosition.y >= board.getCols()) {
-            safePosition = board.getStartPosition();
+        float safeRow = playerRow;
+        float safeCol = playerCol;
+        if (!std::isfinite(safeRow) || !std::isfinite(safeCol) ||
+            safeRow < 0.0f || safeRow >= static_cast<float>(board.getRows()) ||
+            safeCol < 0.0f || safeCol >= static_cast<float>(board.getCols())) {
+            Point start = board.getStartPosition();
+            safeRow = static_cast<float>(start.x);
+            safeCol = static_cast<float>(start.y);
         }
-        player->drawAt(layout.x, layout.y, layout.tileSize, safePosition.x, safePosition.y);
+        player->drawAtTilePosition(layout.x, layout.y, layout.tileSize, safeRow, safeCol);
     }
 
     for (int row = 0; row <= board.getRows(); ++row) {

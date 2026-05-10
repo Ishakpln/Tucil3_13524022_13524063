@@ -90,7 +90,7 @@ void SelectBoard::update()
 
 void SelectBoard::draw()
 {
-    DrawText("SELECT BOARD", 40, 30, 36, Theme::Text);
+    DrawText("SELECT BOARD", 210, 25, 30, Theme::Text);
 
     if (GuiButton(Rectangle{20, 20, 150, 45}, "Main Menu"))
     {

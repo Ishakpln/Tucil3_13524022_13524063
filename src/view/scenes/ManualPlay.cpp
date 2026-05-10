@@ -5,7 +5,7 @@
 ManualPlay::ManualPlay(GameState &gs): 
     gameState(gs),
     renderer(gs.getPlayerType()),
-    playerMotion(8.0f),
+    playerMotion(6.0f),
     playerPosition(gs.isBoardSelected() ? gs.getBoardRef().getStartPosition() : Point{-1, -1}),
     targetIndex(0),
     requestedScene(SceneType::ManualPlay),
@@ -58,8 +58,8 @@ void ManualPlay::update() {
     playerMotion.update(dt);
     renderer.update(dt, playerMotion.isActive());
 
-    // jangan pedulikan input kalau masih dalam fase bergerak
-        if (playerMotion.isActive()) {
+    // While the player is sliding, ignore new movement input so visual and logical state stay in sync.
+    if (playerMotion.isActive()) {
         return;
     }
 
@@ -71,7 +71,7 @@ void ManualPlay::update() {
 
 void ManualPlay::draw()
 {
-    DrawText("PLAY MANUAL", 210, 25, 30, Theme::Text);
+    DrawText("PLAY MANUAL", 210, 25, 32, Theme::Text);
 
     if (GuiButton(Rectangle{20, 20, 150, 42}, "Main Menu"))
     {
@@ -100,7 +100,7 @@ void ManualPlay::draw()
     if (gameState.isBoardSelected())
     {
         Vector2 drawPosition = playerMotion.getCurrentTilePosition();
-        renderer.drawBoardAt(gameState.getBoardRef(), boardBounds, drawPosition.x, drawPosition.y, true);
+        renderer.drawBoardAt(gameState.getBoardRef(), boardBounds, drawPosition.x, drawPosition.y, true, playerMotion.getRotationFromUpDegrees());
     }
     else
     {

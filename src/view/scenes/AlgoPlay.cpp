@@ -7,7 +7,7 @@
 AlgoPlay::AlgoPlay(GameState &gs): 
     gameState(gs),
     renderer(gs.getPlayerType()),
-    playerMotion(8.0f),
+    playerMotion(6.0f),
     requestedScene(SceneType::AlgoPlay),
     selectedAlgorithm(AlgorithmType::ASTAR),
     selectedHeuristic(HeuristicType::MANHATTAN_CHECKPOINT),
@@ -162,7 +162,7 @@ void AlgoPlay::draw()
     if (gameState.isBoardSelected())
     {
         Vector2 drawPosition = playerMotion.getCurrentTilePosition();
-        renderer.drawBoardAt(gameState.getBoardRef(), boardBounds, drawPosition.x, drawPosition.y, true);
+        renderer.drawBoardAt(gameState.getBoardRef(), boardBounds, drawPosition.x, drawPosition.y, true, playerMotion.getRotationFromUpDegrees());
     }
     else
     {

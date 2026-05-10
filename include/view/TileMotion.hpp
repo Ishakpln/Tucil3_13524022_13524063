@@ -24,4 +24,8 @@ public:
 
     // Vector2.x stores the interpolated board row and Vector2.y stores the interpolated board column.
     Vector2 getCurrentTilePosition() const;
+
+    // Player art faces upward by default. This returns the rotation needed while sliding.
+    // When the player is not sliding, it returns 0 so the player faces upward again.
+    float getRotationFromUpDegrees() const;
 };

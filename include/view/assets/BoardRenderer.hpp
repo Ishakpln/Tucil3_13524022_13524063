@@ -44,6 +44,6 @@ public:
 
     BoardLayout calculateLayout(const Board& board, Rectangle bounds) const;
     std::vector<ObstacleRegion> buildGreedyObstacleRegions(const Board& board) const;
-    void drawBoard(const Board& board, Rectangle bounds, Point playerPosition, bool drawPlayer = true) const;
-    void drawBoardAt(const Board& board, Rectangle bounds, float playerRow, float playerCol, bool drawPlayer = true) const;
+    void drawBoard(const Board& board, Rectangle bounds, Point playerPosition, bool drawPlayer = true, float playerRotationDegrees = 0.0f) const;
+    void drawBoardAt(const Board& board, Rectangle bounds, float playerRow, float playerCol, bool drawPlayer = true, float playerRotationDegrees = 0.0f) const;
 };

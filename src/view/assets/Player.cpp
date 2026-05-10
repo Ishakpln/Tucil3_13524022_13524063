@@ -9,8 +9,6 @@ Player::Player(std::string typeName)
     for (int i = 1; i <= 3; ++i) {
         std::string path = "./assets/players/" + playerType + "/" + std::to_string(i) + ".png";
         if (!FileExists(path.c_str()) && i > 1) {
-            // Some future/incomplete player folders may not contain all 3 images yet.
-            // Reuse frame 1 so animation logic still stays 1-2-1-3 without crashing.
             path = "./assets/players/" + playerType + "/1.png";
         }
         frames.emplace_back(path);
@@ -38,11 +36,11 @@ void Player::resetAnimation() {
     sequenceIndex = 0;
 }
 
-void Player::drawAt(float boardX, float boardY, float tileSize, int row, int col) const {
-    drawAtTilePosition(boardX, boardY, tileSize, static_cast<float>(row), static_cast<float>(col));
+void Player::drawAt(float boardX, float boardY, float tileSize, int row, int col, float rotationDegrees) const {
+    drawAtTilePosition(boardX, boardY, tileSize, static_cast<float>(row), static_cast<float>(col), rotationDegrees);
 }
 
-void Player::drawAtTilePosition(float boardX, float boardY, float tileSize, float row, float col) const {
+void Player::drawAtTilePosition(float boardX, float boardY, float tileSize, float row, float col, float rotationDegrees) const {
     if (frames.empty()) {
         return;
     }
@@ -61,8 +59,10 @@ void Player::drawAtTilePosition(float boardX, float boardY, float tileSize, floa
     }
 
     Rectangle src = AssetUtils::fullTextureSource(frames[frameIndex].get());
-    Rectangle dst{x, y, tileSize, tileSize};
-    DrawTexturePro(frames[frameIndex].get(), src, dst, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+
+    Rectangle dst{x + tileSize / 2.0f, y + tileSize / 2.0f, tileSize, tileSize};
+    Vector2 origin{tileSize / 2.0f, tileSize / 2.0f};
+    DrawTexturePro(frames[frameIndex].get(), src, dst, origin, rotationDegrees, WHITE);
 }
 
 Baby::Baby() : Player("Baby") {}

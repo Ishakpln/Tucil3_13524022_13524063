@@ -220,11 +220,11 @@ void BoardRenderer::drawObstacleRegion(const ObstacleRegion& region, const Board
     }
 }
 
-void BoardRenderer::drawBoard(const Board& board, Rectangle bounds, Point playerPosition, bool drawPlayer) const {
-    drawBoardAt(board, bounds, static_cast<float>(playerPosition.x), static_cast<float>(playerPosition.y), drawPlayer);
+void BoardRenderer::drawBoard(const Board& board, Rectangle bounds, Point playerPosition, bool drawPlayer, float playerRotationDegrees) const {
+    drawBoardAt(board, bounds, static_cast<float>(playerPosition.x), static_cast<float>(playerPosition.y), drawPlayer, playerRotationDegrees);
 }
 
-void BoardRenderer::drawBoardAt(const Board& board, Rectangle bounds, float playerRow, float playerCol, bool drawPlayer) const {
+void BoardRenderer::drawBoardAt(const Board& board, Rectangle bounds, float playerRow, float playerCol, bool drawPlayer, float playerRotationDegrees) const {
     if (board.getRows() <= 0 || board.getCols() <= 0) {
         DrawText("No board loaded", static_cast<int>(bounds.x + 20), static_cast<int>(bounds.y + 20), 24, GRAY);
         return;
@@ -279,7 +279,7 @@ void BoardRenderer::drawBoardAt(const Board& board, Rectangle bounds, float play
             safeRow = static_cast<float>(start.x);
             safeCol = static_cast<float>(start.y);
         }
-        player->drawAtTilePosition(layout.x, layout.y, layout.tileSize, safeRow, safeCol);
+        player->drawAtTilePosition(layout.x, layout.y, layout.tileSize, safeRow, safeCol, playerRotationDegrees);
     }
 
     for (int row = 0; row <= board.getRows(); ++row) {

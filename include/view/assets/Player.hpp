@@ -28,8 +28,8 @@ public:
     const std::string& getType() const;
     void update(float dt, bool moving = true);
     void resetAnimation();
-    void drawAt(float boardX, float boardY, float tileSize, int row, int col) const;
-    void drawAtTilePosition(float boardX, float boardY, float tileSize, float row, float col) const;
+    void drawAt(float boardX, float boardY, float tileSize, int row, int col, float rotationDegrees = 0.0f) const;
+    void drawAtTilePosition(float boardX, float boardY, float tileSize, float row, float col, float rotationDegrees = 0.0f) const;
 };
 
 class Baby : public Player {

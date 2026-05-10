@@ -67,3 +67,25 @@ Vector2 TileMotion::getCurrentTilePosition() const {
     const float col = static_cast<float>(startTile.y) + static_cast<float>(endTile.y - startTile.y) * t;
     return Vector2{row, col};
 }
+
+
+float TileMotion::getRotationFromUpDegrees() const {
+    if (!active) {
+        return 0.0f;
+    }
+
+    const int rowDelta = endTile.x - startTile.x;
+    const int colDelta = endTile.y - startTile.y;
+
+    // The player sprite image faces upward by default.
+    // Board coordinates use x as row and y as column.
+    if (std::abs(colDelta) > std::abs(rowDelta)) {
+        return colDelta > 0 ? 90.0f : -90.0f;   // right : left
+    }
+
+    if (rowDelta > 0) {
+        return 180.0f;                          // down
+    }
+
+    return 0.0f;                                // up, no movement, or invalid movement
+}

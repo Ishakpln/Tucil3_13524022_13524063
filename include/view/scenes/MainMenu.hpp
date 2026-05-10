@@ -12,6 +12,7 @@ private:
     MenuButton algoBtn;
     MenuButton cmapBtn;
     Title title;
+    SceneType requestedScene;
 
 public:
     MainMenu(GameState& gs);

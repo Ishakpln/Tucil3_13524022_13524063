@@ -6,6 +6,7 @@ class BoardEditor : public Scene
 {
 private:
     GameState& gameState;
+    SceneType requestedScene;
 
 public:
     BoardEditor(GameState& gs);
